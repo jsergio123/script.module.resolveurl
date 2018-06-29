@@ -14,6 +14,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 import re, urllib, json
 from lib import helpers
+from lib import unwise
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
 
@@ -34,15 +35,13 @@ class WaawResolver(ResolveUrl):
 
         if html:
             try:
-                wise = re.search('''<script type=["']text/javascript["']>\s*;?(eval.*?)</script>''', html,
-                                 re.DOTALL | re.I).groups()[0]
-                data_unwise = self.jswise(wise).replace("\\", "")
+                data_unwise = unwise.unwise_process(html)
                 try:
-                    at = re.search('at=(\w+)', data_unwise, re.I).groups()[0]
+                    at = re.search('&at=(.*?)&', data_unwise, re.I).groups()[0]
                 except:
                     at = ""
                 try:
-                    http_referer = re.search('http_referer=(.*?)&', data_unwise, re.I).groups()[0]
+                    http_referer = re.search('&http_referer=(.*?)&', data_unwise, re.I).groups()[0]
                 except:
                     http_referer = ""
                 player_url = "http://hqq.watch/sec/player/embed_player.php?iss=&vid=%s&at=%s&autoplayed=yes&referer=on&http_referer=%s&pass=&embed_from=&need_captcha=0&hash_from=&secured=0" % (
@@ -59,7 +58,7 @@ class WaawResolver(ResolveUrl):
                 wise = re.search('''<script type=["']text/javascript["']>\s*;?(eval.*?)</script>''', data_player,
                                  re.DOTALL | re.I)
                 if wise:
-                    data_unwise_player = self.jswise(wise.group(1)).replace("\\", "")
+                    data_unwise_player = unwise.unwise_process(data_player)
 
                 try:
                     vars_data = re.search('/player/get_md5.php",\s*\{(.*?)\}', data, re.DOTALL | re.I).groups()[0]
@@ -110,58 +109,7 @@ class WaawResolver(ResolveUrl):
             j += 3
 
         return s2.decode('unicode-escape').encode('ASCII', 'ignore')
-
-    ## loop2unobfuscated
-    def jswise(self, wise):
-        while True:
-            wise = re.search("var\s.+?\('([^']+)','([^']+)','([^']+)','([^']+)'\)", wise, re.DOTALL)
-            if not wise: break
-            ret = wise = self.js_wise(wise.groups())
-
-        return ret
-
-    ## js2python
-    def js_wise(self, wise):
-        w, i, s, e = wise
-
-        v0 = 0;
-        v1 = 0;
-        v2 = 0
-        v3 = [];
-        v4 = []
-
-        while True:
-            if v0 < 5:
-                v4.append(w[v0])
-            elif v0 < len(w):
-                v3.append(w[v0])
-            v0 += 1
-            if v1 < 5:
-                v4.append(i[v1])
-            elif v1 < len(i):
-                v3.append(i[v1])
-            v1 += 1
-            if v2 < 5:
-                v4.append(s[v2])
-            elif v2 < len(s):
-                v3.append(s[v2])
-            v2 += 1
-            if len(w) + len(i) + len(s) + len(e) == len(v3) + len(v4) + len(e): break
-
-        v5 = "".join(v3);
-        v6 = "".join(v4)
-        v1 = 0
-        v7 = []
-
-        for v0 in range(0, len(v3), 2):
-            v8 = -1
-            if ord(v6[v1]) % 2: v8 = 1
-            v7.append(chr(int(v5[v0:v0 + 2], 36) - v8))
-            v1 += 1
-            if v1 >= len(v4): v1 = 0
-
-        return "".join(v7)
-
+		
     def get_url(self, host, media_id):
         return self._default_get_url(host, media_id,
                                      template='http://hqq.watch/player/embed_player.php?vid={media_id}&autoplay=no')
