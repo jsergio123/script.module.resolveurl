@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
     OVERALL CREDIT TO:
         t0mm0, Eldorado, VOINAGE, BSTRDMKR, tknorris, smokdpi, TheHighway
@@ -19,40 +21,58 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, speedvid_gmu
+from random import *
+import re, math, time, os
+from lib import aa_decoder
+from lib import helpers
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
 
 logger = common.log_utils.Logger.get_logger(__name__)
 logger.disable()
-SV_SOURCE = 'https://raw.githubusercontent.com/jsergio123/script.module.resolveurl/master/lib/resolveurl/plugins/speedvid_gmu.py'
-SV_PATH = os.path.join(common.plugins_path, 'speedvid_gmu.py')
-
+net = common.Net()
 
 class SpeedVidResolver(ResolveUrl):
     name = "SpeedVid"
     domains = ['speedvid.net']
     pattern = '(?://|\.)(speedvid\.net)/(?:embed-|p-)?([0-9a-zA-Z]+)'
-    
+ 
     def __init__(self):
         self.net = common.Net()
     
     def get_media_url(self, host, media_id):
-        try:
-            self._auto_update(SV_SOURCE, SV_PATH)
-            reload(speedvid_gmu)
-            web_url = self.get_url(host, media_id)
-            return speedvid_gmu.get_media_url(web_url, media_id)
-        except Exception as e:
-            logger.log_debug('Exception during %s resolve parse: %s' % (self.name, e))
-            raise
-        
+
+        web_url = self.get_url(host, media_id)
+        headers = {'User-Agent': common.RAND_UA}
+        html = net.http_GET(web_url, headers=headers).content
+        if html:	
+            html = html.encode('utf-8')	
+            aa_text = re.findall("""(ﾟωﾟﾉ\s*=\s*/｀ｍ´\s*）\s*ﾉ.+?)</SCRIPT>""", html, re.I)	
+            if aa_text:	
+                try:	
+                    aa_decoded = ''
+                    for i in aa_text:
+                        try: aa_decoded += str(aa_decoder.AADecoder(re.sub('\(+ﾟДﾟ\)+\s*\[ﾟoﾟ\]\)*\s*\+(.+?)\(+ﾟДﾟ\s*\)+\[ﾟoﾟ\]\)+', r'(ﾟДﾟ)[ﾟoﾟ]+\1(ﾟДﾟ)[ﾟoﾟ])', i)).decode())
+                        except: pass	
+                    href = re.search("""\.location\s*=\s*['"]\/([^"']+)""", aa_decoded)
+                    if href:
+                        href = href.group(1)
+                        if href.startswith("http"): location = href
+                        elif href.startswith("//"): location = "http:%s" % href
+                        else: location = "http://www.speedvid.net/%s" % href
+                        headers.update({'Referer': web_url, 'Cookie': str((int(math.floor((900-100)*random())+100))*(int(time.time()))*(128/8))})
+                        _html = net.http_GET(location, headers=headers).content
+                        if _html:
+                            _html = _html.encode('utf-8')	
+                            _html = _html.replace("\'", '"')
+                            sources = helpers.scrape_sources(_html, patterns=['''file\s*:\s*.["'](?P<url>(?=http://s(?:[\d]))[^"']+)'''])
+                            if sources:
+                                del headers['Cookie']
+                                headers.update({'Referer': location})
+                                return helpers.pick_source(sources) + helpers.append_headers(headers)
+                except Exception as e:
+                    raise ResolverError(e)
+            raise ResolverError('File not found')							
+
     def get_url(self, host, media_id):
         return self._default_get_url(host, media_id, 'http://www.{host}/embed-{media_id}.html')
-        
-    @classmethod
-    def get_settings_xml(cls):
-        xml = super(cls, cls).get_settings_xml()
-        xml.append('<setting id="%s_auto_update" type="bool" label="Automatically update resolver" default="true"/>' % (cls.__name__))
-        xml.append('<setting id="%s_etag" type="text" default="" visible="false"/>' % (cls.__name__))
-        return xml
