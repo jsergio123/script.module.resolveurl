@@ -20,59 +20,53 @@ from lib import jsunpack
 from lib import helpers
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
-import string,requests
-from string import maketrans
+import string
+
+rot13 = string.maketrans(
+    "ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz",
+    "NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm")
 
 class CdaResolver(ResolveUrl):
     name = "cda"
     domains = ['cda.pl', 'www.cda.pl', 'ebd.cda.pl']
-    pattern = '(?:\/\/|\.)(cda\.pl)\/(?:.\d+x\d+|video)\/(.*)'
+    pattern = '(?://|\.)(cda\.pl)/(?:.\d+x\d+|video)/([0-9a-zA-Z]+)'
 
     def __init__(self):
         self.net = common.Net()
 
     def get_media_url(self, host, media_id):
-        intab = "abcdefghijklmnopqrstuvwxyz"
-        outtab = "nopqrstuvwxyzabcdefghijklm"
-        trantab = maketrans(intab, outtab)
-        web_url = str(self.get_url(host, media_id)).split("?")
-        web_url = web_url[0]
-        headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'}
-        result = requests.get(web_url, headers=headers).content
-        if "?wersja=1080p" in result:
-            result = requests.get(web_url + "?wersja=1080p", headers=headers).content
-            direct = re.findall("""file":"(.*)","file_cast""", result)[0].replace("\\/","/")
-            if str(direct).startswith("uggc"):
-                direct = direct.translate(trantab)
-            return direct
-            raise ResolverError('Video Link Not Found')
-        if "?wersja=720p" in result:
-            result = requests.get(web_url + "?wersja=720p", headers=headers).content
-            direct = re.findall("""file":"(.*)","file_cast""", result)[0].replace("\\/","/")
-            if str(direct).startswith("uggc"):
-                direct = direct.translate(trantab)
-            return direct
-            raise ResolverError('Video Link Not Found')
-        if "?wersja=480p" in result:
-            result = requests.get(web_url + "?wersja=480p", headers=headers).content
-            direct = re.findall("""file":"(.*)","file_cast""", result)[0].replace("\\/","/")
-            if str(direct).startswith("uggc"):
-                direct = direct.translate(trantab)
-            return direct
-            raise ResolverError('Video Link Not Found')
-        if "?wersja=360p" in result:
-            result = requests.get(web_url + "?wersja=360p", headers=headers).content
-            direct = re.findall("""file":"(.*)","file_cast""", result)[0].replace("\\/","/")
-            if str(direct).startswith("uggc"):
-                direct = direct.translate(trantab)
-            return direct
-            raise ResolverError('Video Link Not Found')
-        result = requests.get(web_url, headers=headers).content
-        direct = re.findall("""file":"(.*)","file_cast""", result)[0].replace("\\/","/")
-        if str(direct).startswith("uggc"):
-            direct = direct.translate(trantab)
-        return direct
+        web_url = self.get_url(host, media_id)
+        headers = {'Referer': web_url, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'}
+		
+        player_headers = {'Cookie': 'PHPSESSID=1', 'Referer': web_url, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'}
+        player_headers.update(headers)
+
+        html = self.net.http_GET(web_url, headers=headers).content
+        try: html = html.encode('utf-8')
+        except: pass
+        match = re.findall('data-quality="(.*?)" href="(.*?)".*?>(.*?)</a>', html, re.DOTALL)
+        if match:
+            mylinks = sorted(match, key=lambda x: x[2])
+            html = self.net.http_GET(mylinks[-1][1], headers=headers).content
+            
+        from HTMLParser import HTMLParser
+        match = re.search('''['"]file['"]:\s*['"](.+?)['"]''', HTMLParser().unescape(html))
+        if match:
+            mylink = match.group(1).replace("\\", "")
+            return self.__check_vid(mylink) + helpers.append_headers(player_headers)
+
+        html = jsunpack.unpack(re.search("eval(.*?)\{\}\)\)", html, re.DOTALL).group(1))
+        match = re.search('src="(.*?\.mp4)"', html)
+        if match:
+            return self.__check_vid(match.group(1)) + helpers.append_headers(player_headers)
+
         raise ResolverError('Video Link Not Found')
+
+    def __check_vid(self, video_link):
+        if re.match('uggc', video_link):
+            video_link = string.translate(video_link, rot13)
+            video_link = video_link[:-7] + video_link[-4:]
+        return video_link
 
     def get_url(self, host, media_id):
         return 'http://ebd.cda.pl/647x500/%s' % media_id
