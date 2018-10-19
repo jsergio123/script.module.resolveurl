@@ -22,7 +22,7 @@ from resolveurl.resolver import ResolveUrl, ResolverError
 class RapidVideoResolver(ResolveUrl):
     name = "rapidvideo.com"
     domains = ["rapidvideo.com", "raptu.com", "bitporno.com"]
-    pattern = '(?://|\.)((?:rapidvideo|raptu|bitporno)\.com)/(?:[ev]/|embed/\?v=)?([0-9A-Za-z]+)'
+    pattern = '(?://|\.)((?:rapidvideo|raptu|bitporno)\.com)/(?:[ev]/|embed/|embed/\?v=)?([0-9A-Za-z]+)'
 
     def __init__(self):
         self.net = common.Net()
