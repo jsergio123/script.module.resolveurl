@@ -36,9 +36,9 @@ class CdaResolver(ResolveUrl):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        headers = {'Referer': web_url, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'}
+        headers = {'Referer': web_url, 'User-Agent': common.CHROME_USER_AGENT}
 		
-        player_headers = {'Cookie': 'PHPSESSID=1', 'Referer': web_url, 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'}
+        player_headers = {'Cookie': 'PHPSESSID=1', 'Referer': web_url, 'User-Agent': common.CHROME_USER_AGENT}
         player_headers.update(headers)
 
         html = self.net.http_GET(web_url, headers=headers).content
