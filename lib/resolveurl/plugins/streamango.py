@@ -1,83 +1,106 @@
+# -*- coding: utf-8 -*-
 """
-    resolveurl Kodi Addon
+streamango resolveurl plugin
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-import re
+import os
+import json
 from lib import helpers
 from resolveurl import common
+from resolveurl.common import i18n
 from resolveurl.resolver import ResolveUrl, ResolverError
+
+logger = common.log_utils.Logger.get_logger(__name__)
+logger.disable()
+
+API_BASE_URL = 'https://api.fruithosted.net'
+INFO_URL = API_BASE_URL + '/streaming/info'
+GET_URL = API_BASE_URL + '/streaming/get?file={media_id}'
+FILE_URL = API_BASE_URL + '/file/info?file={media_id}'
 
 class StreamangoResolver(ResolveUrl):
     name = "streamango"
-    domains = ['streamango.com', 'streamcherry.com', 'fruitstreams.com', 'fruitadblock.net']
-    pattern = '(?://|\.)((?:stream(?:ango|cherry)|fruitstreams|fruitadblock)\.(?:com|net))/(?:v/d|f|embed)/([0-9a-zA-Z]+)'
-    
+    domains = ['streamango.com', 'streamcherry.com', 'fruitstreams.com', 'fruitadblock.net', 'fruithosted.net']
+    pattern = '(?://|\.)((?:stream(?:ango|cherry)|fruitstreams|fruitadblock|fruithosted)\.(?:com|net))/(?:v/d|f|embed)/([0-9a-zA-Z]+)'
+
+
     def __init__(self):
         self.net = common.Net()
-    
+
     def get_media_url(self, host, media_id):
-        web_url = self.get_url(host, media_id)
-        headers = {'User-Agent': common.RAND_UA}
-        html = self.net.http_GET(web_url, headers=headers).content
-        
-        if html:
-            encoded = re.search('''srces\.push\(\s*{type:"video/mp4",src:\w+\('([^']+)',(\d+)''', html)
-            if encoded:
-                source = self.decode(encoded.group(1), int(encoded.group(2)))
-                if source:
-                    source = "http:%s" % source if source.startswith("//") else source
-                    source = source.split("/")
-                    if not source[-1].isdigit():
-                      source[-1] = re.sub('[^\d]', '', source[-1])
-                    source = "/".join(source)
-                    headers.update({'Referer': web_url})
-                    return source + helpers.append_headers(headers)
-        
-        raise ResolverError("Unable to locate video")
-        
-    def decode(self, encoded, code):
-        _0x59b81a = ""
-        k = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
-        k = k[::-1]
+        try:
+            if not self.__file_exists(media_id):
+                raise ResolverError('File Not Available')
 
-        count = 0
+            video_url = self.__check_auth(media_id)
+            if not video_url:
+                video_url = self.__auth_ip(media_id)
+        except ResolverError:
+            raise
 
-        for index in range(0, len(encoded) - 1):
-            while count <= len(encoded) - 1:
-                _0x4a2f3a = k.index(encoded[count])
-                count += 1
-                _0x29d5bf = k.index(encoded[count])
-                count += 1
-                _0x3b6833 = k.index(encoded[count])
-                count += 1
-                _0x426d70 = k.index(encoded[count])
-                count += 1
-
-                _0x2e4782 = ((_0x4a2f3a << 2) | (_0x29d5bf >> 4))
-                _0x2c0540 = (((_0x29d5bf & 15) << 4) | (_0x3b6833 >> 2))
-                _0x5a46ef = ((_0x3b6833 & 3) << 6) | _0x426d70
-                _0x2e4782 = _0x2e4782 ^ code
-
-                _0x59b81a = str(_0x59b81a) + chr(_0x2e4782)
-
-                if _0x3b6833 != 64:
-                    _0x59b81a = str(_0x59b81a) + chr(_0x2c0540)
-                if _0x3b6833 != 64:
-                    _0x59b81a = str(_0x59b81a) + chr(_0x5a46ef)
-
-        return _0x59b81a
+        if video_url:
+            headers = {'User-Agent': common.RAND_UA}
+            video_url = video_url + helpers.append_headers(headers)
+            return video_url
+        else:
+            raise ResolverError(i18n('no_ip_authorization'))
 
     def get_url(self, host, media_id):
-        return self._default_get_url(host, media_id, 'https://streamango.com/embed/{media_id}')
+        return 'http://streamango.com/embed/%s' % (media_id)
+
+    def __file_exists(self, media_id):
+        js_data = self.__get_json(FILE_URL.format(media_id=media_id))
+        return js_data.get('result', {}).get(media_id, {}).get('status') == 200
+
+    def __auth_ip(self, media_id):
+        js_data = self.__get_json(INFO_URL)
+        pair_url = js_data.get('result', {}).get('auth_url', '')
+        if pair_url:
+            pair_url = pair_url.replace('\/', '/')
+            header = i18n('stream_auth_header')
+            line1 = i18n('auth_required')
+            line2 = i18n('visit_link')
+            line3 = i18n('click_pair').decode('utf-8') % (pair_url)
+            with common.kodi.CountdownDialog(header, line1, line2, line3) as cd:
+                return cd.start(self.__check_auth, [media_id])
+
+    def __check_auth(self, media_id):
+        try:
+            js_data = self.__get_json(GET_URL.format(media_id=media_id))
+        except ResolverError as e:
+            status, msg = e
+            if status == 403:
+                return
+            else:
+                raise ResolverError(msg)
+
+        return js_data.get('result', {}).get('url')
+
+    def __get_json(self, url):
+        result = self.net.http_GET(url).content
+        common.logger.log(result)
+        js_result = json.loads(result)
+        if js_result['status'] != 200:
+            raise ResolverError(js_result['status'], js_result['msg'])
+        return js_result
+
+    @classmethod
+    def get_settings_xml(cls):
+        xml = super(cls, cls).get_settings_xml()
+        xml.append('<setting id="%s_auto_update" type="bool" label="%s" default="true"/>' % (cls.__name__, i18n('auto_update')))
+        xml.append('<setting id="%s_url" type="text" label="    %s" default="" visible="eq(-1,true)"/>' % (cls.__name__, i18n('update_url')))
+        xml.append('<setting id="%s_key" type="text" label="    %s" default="" option="hidden" visible="eq(-2,true)"/>' % (cls.__name__, i18n('decrypt_key')))
+        xml.append('<setting id="%s_etag" type="text" default="" visible="false"/>' % (cls.__name__))
+        return xml
