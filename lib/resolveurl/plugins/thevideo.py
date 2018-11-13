@@ -31,7 +31,7 @@ class TheVideoResolver(ResolveUrl):
     def __init__(self):
         self.net = common.Net()
         self.headers = {'User-Agent': common.SMR_USER_AGENT}
-        
+
 
     def get_media_url(self, host, media_id):
         try:
@@ -46,7 +46,7 @@ class TheVideoResolver(ResolveUrl):
         else:
             raise ResolverError('No Video Streams')
 
-            
+
     def __auth_ip(self, media_id):
         header = i18n('thevideo_auth_header')
         line1 = i18n('auth_required')
@@ -55,7 +55,7 @@ class TheVideoResolver(ResolveUrl):
         with common.kodi.CountdownDialog(header, line1, line2, line3) as cd:
             return cd.start(self.__check_auth, [media_id])
 
-            
+
     def __check_auth(self, media_id):
         common.logger.log('Checking Auth: %s' % (media_id))
         url = 'https://vev.io/api/pair/' + media_id
@@ -71,9 +71,9 @@ class TheVideoResolver(ResolveUrl):
             if e.code == 400:
                 pass # Continue. User hasn't paired yet.
             else:
-                raise ResolverError('Unexpected HTTP Response')                
+                raise ResolverError('Unexpected HTTP Response')
         return None
 
-            
+
     def get_url(self, host, media_id):
         return self._default_get_url(host, media_id, template='https://vev.io/embed/{media_id}')
