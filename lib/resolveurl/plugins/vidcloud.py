@@ -22,8 +22,8 @@ from resolveurl.resolver import ResolveUrl, ResolverError
 
 class VidCloudResolver(ResolveUrl):
     name = 'vidcloud'
-    domains = ['vidcloud.co', 'loadvid.online']
-    pattern = '(?://|\.)((?:vidcloud.co|loadvid.online))/(?:embed/|v/|player\?fid=)([0-9a-zA-Z]+)'
+    domains = ['vidcloud.co', 'loadvid.online', 'vcstream.to']
+    pattern = '(?://|\.)((?:vidcloud.co|loadvid.online|vcstream\.to))/(?:embed/|v/|player\?fid=)([0-9a-zA-Z]+)'
 
     def __init__(self):
         self.net = common.Net()
