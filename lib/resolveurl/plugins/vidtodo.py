@@ -34,16 +34,11 @@ class VidToDoResolver(ResolveUrl):
         html = self.net.http_GET(web_url, headers=headers).content
 
         if html:
-            data = helpers.get_hidden(html)
-            headers.update({'Referer': web_url})
-            common.kodi.sleep(2000)
-            _html = self.net.http_POST(web_url, headers=headers, form_data=data).content
-            if _html:
-                sources = helpers.scrape_sources(_html, patterns=['''(?:file:|xpro\()\s*["'](?P<url>[^"']+)["']\)?,\s*label\s*:\s*["'](?P<label>[^"',]{3,4})["']'''], generic_patterns=False)
-                if sources:
-                    sources = [(source[0], source[1].decode("rot-13")) if (source[1].startswith("uggc")) else (source[0], source[1]) for source in sources]
+            sources = helpers.scrape_sources(html, patterns=['''(?:file:|xpro\()\s*["'](?P<url>[^"']+)["']\)?,\s*label\s*:\s*["'](?P<label>[^"',]{3,4})["']'''], generic_patterns=False)
+            if sources:
+                sources = [(source[0], source[1].decode("rot-13")) if (source[1].startswith("uggc")) else (source[0], source[1]) for source in sources]
 
-                    return helpers.pick_source(sources) + helpers.append_headers(headers)
+                return helpers.pick_source(sources) + helpers.append_headers(headers)
 
         raise ResolverError('Unable to locate video')
 
