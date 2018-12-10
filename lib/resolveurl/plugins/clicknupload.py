@@ -16,12 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 '''
 import re
+import urllib
 from lib import helpers
 from lib import captcha_lib
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
 
 MAX_TRIES = 3
+
 
 class ClickNUploadResolver(ResolveUrl):
     name = "clicknupload"
@@ -45,11 +47,13 @@ class ClickNUploadResolver(ResolveUrl):
             html = self.net.http_POST(web_url, data, headers=headers).content
             r = re.search('''class="downloadbtn"[^>]+onClick\s*=\s*\"window\.open\('([^']+)''', html)
             if r:
-                return r.group(1) + helpers.append_headers(headers)
+                sublinks = r.group(1).split("/")
+                link = "/".join(sublinks[:-1]) + "/" + urllib.quote(sublinks[-1])
+                return link + helpers.append_headers(headers)
 
             if tries > 0:
                 common.kodi.sleep(1000)
-                
+
             tries = tries + 1
 
         raise ResolverError('Unable to locate link')
@@ -60,3 +64,7 @@ class ClickNUploadResolver(ResolveUrl):
     @classmethod
     def isPopup(self):
         return True
+
+    def test(self):
+        yield self.test_url("https://clicknupload.org/mjvz2k55zonj",
+                            minsize=1082000000)

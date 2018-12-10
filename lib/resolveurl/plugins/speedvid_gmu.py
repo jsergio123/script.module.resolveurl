@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 import re, math, time
-from random import *
+from random import random
 from lib import helpers, aadecode
 from resolveurl import common
 from resolveurl.resolver import ResolverError

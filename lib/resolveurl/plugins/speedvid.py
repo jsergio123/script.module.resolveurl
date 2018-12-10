@@ -21,7 +21,7 @@
 
 import os, speedvid_gmu
 from resolveurl import common
-from resolveurl.resolver import ResolveUrl, ResolverError
+from resolveurl.resolver import ResolveUrl
 
 logger = common.log_utils.Logger.get_logger(__name__)
 logger.disable()

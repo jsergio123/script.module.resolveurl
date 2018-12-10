@@ -48,7 +48,7 @@ def translate_path(path):
     return xbmc.translatePath(path).decode('utf-8')
 
 
-def set_setting(id, value):
+def set_setting(id, value):  # @ReservedAssignment
     if not isinstance(value, basestring):
         value = str(value)
     addon.setSetting(id, value)
@@ -188,7 +188,7 @@ class WorkingDialog(object):
     def __enter__(self):
         return self
     
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type, value, traceback):  # @ReservedAssignment
         xbmc.executebuiltin('Dialog.Close(busydialog)')
 
 
@@ -224,7 +224,7 @@ class ProgressDialog(object):
     def __enter__(self):
         return self
     
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type, value, traceback):  # @ReservedAssignment
         if self.pd is not None:
             self.pd.close()
             del self.pd
@@ -270,7 +270,7 @@ class CountdownDialog(object):
     def __enter__(self):
         return self
     
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type, value, traceback):  # @ReservedAssignment
         if self.pd is not None:
             self.pd.close()
             del self.pd

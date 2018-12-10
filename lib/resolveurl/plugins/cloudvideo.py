@@ -3,7 +3,7 @@
         t0mm0, Eldorado, VOINAGE, BSTRDMKR, tknorris, smokdpi, TheHighway
 
     resolveurl XBMC Addon
-    Copyright (C) 2018 jsergio
+    Copyright (C) 2018 jsergio"
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,3 +24,6 @@ from __resolve_generic__ import ResolveGeneric
 class CloudVideoResolver(ResolveGeneric):
     name = 'cloudvideo'
     domains = ['cloudvideo.tv']
+
+    def test(self):
+        yield self.test_url("https://cloudvideo.tv/l2mgl86zfj69")

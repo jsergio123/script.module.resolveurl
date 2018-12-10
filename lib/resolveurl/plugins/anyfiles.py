@@ -20,6 +20,7 @@ from lib import helpers
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
 
+
 class AnyFilesResolver(ResolveUrl):
     name = "anyfiles"
     domains = ["anyfiles.pl"]
@@ -53,12 +54,12 @@ class AnyFilesResolver(ResolveUrl):
         if not js_url.startswith('http'):
             base_url = 'http://' + hostname
             js_url = urlparse.urljoin(base_url, js_url)
-        
+
         if hostname in js_url:
             js_url = js_url.replace('&amp;', '&')
             common.logger.log('Getting JS: |%s| - |%s|' % (js_url, headers))
             js = self.net.http_GET(js_url, headers=headers).content
         return js
-    
+
     def get_url(self, host, media_id):
         return "http://anyfiles.pl/w.jsp?id=%s&width=640&height=360&start=0&skin=0&label=false&autostart=false" % (media_id)

@@ -19,7 +19,8 @@ import random
 import re
 import math
 from resolveurl import common
-from resolveurl.resolver import ResolveUrl, ResolverError
+from resolveurl.resolver import ResolveUrl
+
 
 class CastampResolver(ResolveUrl):
     name = "castamp"
@@ -35,7 +36,7 @@ class CastampResolver(ResolveUrl):
 
         streamer = ""
         flashplayer = ""
-        file = ""
+        _file = ""
 
         common.logger.log("*******************************************")
         common.logger.log("web_url: " + web_url)
@@ -53,10 +54,10 @@ class CastampResolver(ResolveUrl):
         pattern_file = r"""'file': '(.*?)'"""
         r = re.search(pattern_file, html)
         if r:
-            file = r.group(1)
+            _file = r.group(1)
 
         rtmp = streamer
-        rtmp += '/%s swfUrl=%s live=true swfVfy=true pageUrl=%s tcUrl=%s' % (file, flashplayer, web_url, rtmp)
+        rtmp += '/%s swfUrl=%s live=true swfVfy=true pageUrl=%s tcUrl=%s' % (_file, flashplayer, web_url, rtmp)
 
         return rtmp
 

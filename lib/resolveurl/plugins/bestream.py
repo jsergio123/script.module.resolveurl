@@ -20,10 +20,11 @@
 """
 from __resolve_generic__ import ResolveGeneric
 
+
 class SpeedVidResolver(ResolveGeneric):
     name = "bestream.tv"
     domains = ['bestream.tv']
     pattern = '(?://|\.)(bestream\.tv)/(?:plugins/mediaplayer/site/_embed\.php\?u=)?([0-9a-zA-Z-]+)'
-    
+
     def get_url(self, host, media_id):
         return self._default_get_url(host, media_id, template='http://{host}/plugins/mediaplayer/site/_embed.php?u={media_id}&w=1280&h=720')

@@ -37,11 +37,11 @@ class IndavideoResolver(ResolveUrl):
         if data['success'] == '0':
             html = self.net.http_GET('http://indavideo.hu/video/%s' % media_id).content
         
-            hash = re.search('emb_hash.+?value\s*=\s*"([^"]+)', html)
-            if not hash:
+            _hash = re.search('emb_hash.+?value\s*=\s*"([^"]+)', html)
+            if not _hash:
                 raise ResolverError('File not found')
 
-            web_url = self.get_url(host, hash.group(1))
+            web_url = self.get_url(host, _hash.group(1))
 
             html = self.net.http_GET(web_url).content
             data = json.loads(html)

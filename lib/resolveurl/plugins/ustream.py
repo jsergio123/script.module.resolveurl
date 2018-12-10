@@ -17,7 +17,7 @@
 '''
 
 from lib import helpers
-from resolveurl.resolver import ResolveUrl, ResolverError
+from resolveurl.resolver import ResolveUrl
 
 class uStreamResolver(ResolveUrl):
     name = "uStream"

@@ -20,6 +20,7 @@ from lib import helpers
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
 
+
 class DaclipsResolver(ResolveUrl):
     name = "daclips"
     domains = ["daclips.in", "daclips.com"]
@@ -45,3 +46,6 @@ class DaclipsResolver(ResolveUrl):
 
     def get_url(self, host, media_id):
         return 'https://daclips.in/%s' % (media_id)
+
+    def test(self):
+        yield self.test_url("https://daclips.in/rysfd5h12gjq")

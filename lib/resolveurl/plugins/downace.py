@@ -17,6 +17,7 @@
 """
 from __resolve_generic__ import ResolveGeneric
 
+
 class DownaceResolver(ResolveGeneric):
     name = 'downace'
     domains = ['downace.com']

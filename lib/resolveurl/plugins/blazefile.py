@@ -17,6 +17,7 @@
 """
 from __resolve_generic__ import ResolveGeneric
 
+
 class BlazefileResolver(ResolveGeneric):
     name = 'blazefile'
     domains = ['blazefile.co']
@@ -24,3 +25,7 @@ class BlazefileResolver(ResolveGeneric):
 
     def get_url(self, host, media_id):
         return 'https://www.blazefile.co/embed-%s.html' % (media_id)
+
+    def test(self):
+        yield self.test_url("https://www.blazefile.co/embed-l40caxgirjnc.html",
+                            minsize=789000000)

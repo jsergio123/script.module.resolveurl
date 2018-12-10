@@ -26,6 +26,8 @@ def execute_jsonrpc(command):
     if not isinstance(command, basestring):
         command = json.dumps(command)
     response = xbmc.executeJSONRPC(command)
+    if response == "":  # when used with kodi stubs, spoof json response
+        response = "{}"
     return json.loads(response)
 
 def _is_debugging():

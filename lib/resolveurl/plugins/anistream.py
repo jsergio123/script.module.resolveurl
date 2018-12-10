@@ -16,8 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 from __resolve_generic__ import ResolveGeneric
+from lib import helpers
+
 
 class AniStreamResolver(ResolveGeneric):
     name = "ani-stream"
     domains = ["ani-stream.com"]
     pattern = '(?://|\.)(ani-stream\.com)/(?:embed-)?([0-9a-zA-Z-]+)'
+
+    def get_media_url(self, host, media_id):
+        patterns = ['''(?P<url>http[^,]+\.(?:mp4))''']
+        return helpers.get_media_url(self.get_url(host, media_id), patterns=patterns).replace(' ', '%20')
+
+    def test(self):
+        yield self.test_url("http://www.ani-stream.com/embed-s67cccev9lgm.html", minsize=215000000)

@@ -18,7 +18,7 @@
 import json
 from lib import helpers
 from resolveurl import common
-from resolveurl.resolver import ResolveUrl, ResolverError
+from resolveurl.resolver import ResolveUrl
 
 class VimeoResolver(ResolveUrl):
     name = "vimeo"

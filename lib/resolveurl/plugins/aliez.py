@@ -22,11 +22,12 @@ import re
 from lib import helpers
 from __resolve_generic__ import ResolveGeneric
 
+
 class AliezResolver(ResolveGeneric):
     name = "aliez"
     domains = ['aliez.me']
     pattern = '(?://|\.)(aliez\.me)/(?:(?:player/video\.php\?id=([0-9]+)&s=([A-Za-z0-9]+))|(?:video/([0-9]+)/([A-Za-z0-9]+)))'
-    
+
     def get_media_url(self, host, media_id):
         return helpers.get_media_url(self.get_url(host, media_id), patterns=['''file:\s*['"](?P<url>[^'"]+)''']).replace(' ', '%20')
 
@@ -42,3 +43,6 @@ class AliezResolver(ResolveGeneric):
     def get_url(self, host, media_id):
         media_id = media_id.split("|")
         return self._default_get_url(host, media_id, 'http://emb.%s/player/video.php?id=%s&s=%s&w=590&h=332' % (host, media_id[0], media_id[1]))
+
+    def test(self):
+        yield self.test_url("http://aliez.me/video/119617/71qu45kz/", minsize=80000000)

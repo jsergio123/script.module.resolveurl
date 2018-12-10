@@ -23,7 +23,7 @@ from resolveurl.resolver import ResolveUrl
 
 class ResolveGeneric(ResolveUrl):
     __metaclass__ = abc.ABCMeta
-    
+
     """
     Generic Resolver
     ___

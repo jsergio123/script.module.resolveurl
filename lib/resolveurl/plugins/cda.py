@@ -26,6 +26,7 @@ rot13 = string.maketrans(
     "ABCDEFGHIJKLMabcdefghijklmNOPQRSTUVWXYZnopqrstuvwxyz",
     "NOPQRSTUVWXYZnopqrstuvwxyzABCDEFGHIJKLMabcdefghijklm")
 
+
 class CdaResolver(ResolveUrl):
     name = "cda"
     domains = ['cda.pl', 'www.cda.pl', 'ebd.cda.pl']
@@ -37,18 +38,20 @@ class CdaResolver(ResolveUrl):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         headers = {'Referer': web_url, 'User-Agent': common.CHROME_USER_AGENT}
-		
+
         player_headers = {'Cookie': 'PHPSESSID=1', 'Referer': web_url, 'User-Agent': common.CHROME_USER_AGENT}
         player_headers.update(headers)
 
         html = self.net.http_GET(web_url, headers=headers).content
-        try: html = html.encode('utf-8')
-        except: pass
+        try:
+            html = html.encode('utf-8')
+        except Exception:
+            pass
         match = re.findall('data-quality="(.*?)" href="(.*?)".*?>(.*?)</a>', html, re.DOTALL)
         if match:
             mylinks = sorted(match, key=lambda x: x[2])
             html = self.net.http_GET(mylinks[-1][1], headers=headers).content
-            
+
         from HTMLParser import HTMLParser
         match = re.search('''['"]file['"]:\s*['"](.+?)['"]''', HTMLParser().unescape(html))
         if match:
@@ -70,3 +73,7 @@ class CdaResolver(ResolveUrl):
 
     def get_url(self, host, media_id):
         return 'http://ebd.cda.pl/647x500/%s' % media_id
+
+    def test(self):
+        yield self.test_url("http://ebd.cda.pl/825x483/9013978?autostart=1",
+                            minsize=880000000)

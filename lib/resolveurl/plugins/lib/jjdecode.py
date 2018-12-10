@@ -40,7 +40,7 @@ class JJDecoder(object):
     def decode(self):
 
         self.encoded_str = self.clean()
-        startpos, endpos, gv, gvl = self.checkPalindrome(self.encoded_str)
+        startpos, endpos, gv, _ = self.checkPalindrome(self.encoded_str)
 
         if startpos == endpos:
             raise Exception('No data!')

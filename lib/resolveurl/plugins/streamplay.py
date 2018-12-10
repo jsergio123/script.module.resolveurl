@@ -54,3 +54,6 @@ class StreamplayResolver(ResolveUrl):
         x = gira[:2] + gira[3:]
         
         return re.sub(tria, x, url)
+
+    def test_url(self):
+        yield "https://streamplay.me/40o1q7chqdhm"

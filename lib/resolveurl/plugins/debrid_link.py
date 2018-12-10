@@ -27,6 +27,7 @@ from resolveurl.resolver import ResolveUrl, ResolverError
 logger = common.log_utils.Logger.get_logger(__name__)
 logger.disable()
 
+
 class DebridLinkResolver(ResolveUrl):
     name = "Debrid-Link.fr"
     domains = ["*"]
@@ -44,7 +45,7 @@ class DebridLinkResolver(ResolveUrl):
         if not offset or not token or not api_key:
             logger.log_debug('offset: %s, token: %s, key: %s' % (offset, token, api_key))
             raise ResolverError('Insufficent Information to make API call')
-        
+
         url = '/downloader/add'
         server_ts = int(time.time()) - int(offset)
         signature = hashlib.sha1(str(server_ts) + url + api_key).hexdigest()
@@ -58,7 +59,7 @@ class DebridLinkResolver(ResolveUrl):
             stream_url = js_data.get('value', {}).get('downloadLink')
             if stream_url is None:
                 raise ResolverError('No usable link returned from Debrid-Link.fr')
-            
+
             logger.log_debug('Debrid-Link.fr Resolved to %s' % (stream_url))
             return stream_url
         else:
@@ -88,11 +89,11 @@ class DebridLinkResolver(ResolveUrl):
         if 'ts' in js_data:
             offset = int(time.time()) - js_data['ts']
             self.set_setting('ts_offset', offset)
-        
+
     def valid_url(self, url, host):
         if self.hosts is None:
             self.hosts = self.get_all_hosters()
-            
+
         logger.log_debug('in valid_url %s : %s' % (url, host))
         if url:
             match = re.search('//(.*?)/', url)
@@ -101,7 +102,8 @@ class DebridLinkResolver(ResolveUrl):
             else:
                 return False
 
-        if host.startswith('www.'): host = host.replace('www.', '')
+        if host.startswith('www.'):
+            host = host.replace('www.', '')
         if host and any(host in item for item in self.hosts):
             return True
 

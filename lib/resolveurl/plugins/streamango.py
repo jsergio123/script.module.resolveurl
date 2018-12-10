@@ -114,7 +114,7 @@ class StreamangoResolver(ResolveUrl):
 
         count = 0
 
-        for index in range(0, len(encoded) - 1):
+        for _ in range(0, len(encoded) - 1):
             while count <= len(encoded) - 1:
                 _0x4a2f3a = k.index(encoded[count])
                 count += 1

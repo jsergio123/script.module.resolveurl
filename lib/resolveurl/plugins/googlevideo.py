@@ -166,7 +166,7 @@ class GoogleResolver(ResolveUrl):
                                                 sources = self.__extract_video(item2)
                                                 if sources:
                                                     return sources
-            except Exception as e:
+            except Exception as _:
                 pass
         return sources
 

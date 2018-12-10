@@ -22,6 +22,7 @@ import re
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
 
+
 class MailRuResolver(ResolveUrl):
     name = "cloud.mail.ru"
     domains = ['cloud.mail.ru']
@@ -33,12 +34,14 @@ class MailRuResolver(ResolveUrl):
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         html = self.net.http_GET(web_url).content
-        html = re.sub(r'[^\x00-\x7F]+', ' ', html)
-        url_match = re.search('"weblink_get"\s*:\s*\[.+?"url"\s*:\s*"([^"]+)', html)
-        tok_match = re.search('"tokens"\s*:\s*{\s*"download"\s*:\s*"([^"]+)', html)
+        url_match = re.search('"weblink_get"\s*?:\s*?\[.+?"url"\s*?:\s*?"([^"]+)"', html, re.DOTALL)
+        tok_match = re.search('"tokens"\s*?:\s*?{\s*?"download"\s*?:\s*?"([^"]+)', html, re.DOTALL)
         if url_match and tok_match:
             return '%s/%s?key=%s' % (url_match.group(1), media_id, tok_match.group(1))
         raise ResolverError('No playable video found.')
 
     def get_url(self, host, media_id):
         return self._default_get_url(host, media_id, template='https://{host}/public/{media_id}')
+
+    def test(self):
+        yield self.test_url("https://cloud.mail.ru/public/4Cur/e7BhhJeuQ")

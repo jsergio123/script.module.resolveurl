@@ -19,7 +19,6 @@ import re
 import sys
 import urllib
 import string
-import json
 
 class JSUnfuck(object):
     numbers = None
@@ -127,7 +126,7 @@ class JSUnfuck(object):
                                                 
     def __handle_tostring(self):
         for match in re.finditer('(\d+)\[t\+o\+S\+t\+r\+i\+n\+g\](\d+)', self.js):
-            repl = to_base(match.group(1), match.group(2))
+            repl = JSUnfuck.to_base(match.group(1), match.group(2))
             self.js = self.js.replace(match.group(0), repl)
     
     def __handle_escape(self, key):
@@ -219,12 +218,13 @@ class JSUnfuck(object):
                     n[key] = str(hundreds * 100 + tens * 10 + ones)
         return n
     
+    @staticmethod
     def to_base(n, base, digits="0123456789abcdefghijklmnopqrstuvwxyz"):
         n, base = int(n), int(base)
         if n < base:
             return digits[n]
         else:
-            return to_base(n // base, base, digits).lstrip(digits[0]) + digits[n % base]
+            return JSUnfuck.to_base(n // base, base, digits).lstrip(digits[0]) + digits[n % base]
 
             
 def cfunfuck(fuckedup):

@@ -227,13 +227,13 @@ def _rel_import(module, tgt):
 try:
     next
 except NameError:
-    def next(it):
+    def next(it):  # @ReservedAssignment
         """trivial `next` emulation"""
         return it.next()
 try:
     bytes
 except NameError:
-    bytes = str
+    bytes = str  # @ReservedAssignment
 
 
 # Define a bytearray_to_bytes() function.
@@ -258,7 +258,7 @@ try:
 except NameError:
     # bytearray does not exist. We're probably < Python 2.6 (the
     # version in which bytearray appears).
-    def bytearray(src=tuple()):
+    def bytearray(src=tuple()):  # @ReservedAssignment
         """Bytearray-like array"""
         return array('B', src)
 
@@ -285,7 +285,7 @@ except NameError:
 try:
     basestring
 except NameError:
-    basestring = str
+    basestring = str  # @ReservedAssignment
 
 # Conditionally convert to bytes.  Works on Python 2 and Python 3.
 try:
@@ -1525,7 +1525,7 @@ class Writer(object):
             def line():
                 scanline = array('B', infile.read(row_bytes))
                 return scanline
-        for y in range(self.height):
+        for _ in range(self.height):
             yield line()
 
     def array_scanlines(self, pixels):
@@ -1536,7 +1536,7 @@ class Writer(object):
         # Values per row
         vpr = self.width * self.planes
         stop = 0
-        for y in range(self.height):
+        for _ in range(self.height):
             start = stop
             stop = start + vpr
             yield pixels[start:stop]
@@ -1957,7 +1957,7 @@ class Image(object):
         self.rows = rows
         self.info = info
 
-    def save(self, file):
+    def save(self, _file):
         """
         Save the image to *file*.
 
@@ -1973,16 +1973,16 @@ class Image(object):
         w = Writer(**self.info)
 
         try:
-            file.write
+            _file.write
 
             def close(): pass
         except AttributeError:
-            file = open(file, 'wb')
+            _file = open(_file, 'wb')
 
-            def close(): file.close()
+            def close(): _file.close()
 
         try:
-            w.write(file, self.rows)
+            w.write(_file, self.rows)
         finally:
             close()
 
@@ -3041,18 +3041,18 @@ def read_pnm_header(infile, supported=('P5', 'P6')):
     # Technically 'P7' must be followed by a newline, so by using
     # rstrip() we are being liberal in what we accept.  I think this
     # is acceptable.
-    type = infile.read(3).rstrip()
-    if type not in supported:
-        raise NotImplementedError('file format %s not supported' % type)
-    if type == strtobytes('P7'):
+    _type = infile.read(3).rstrip()
+    if _type not in supported:
+        raise NotImplementedError('file format %s not supported' % _type)
+    if _type == strtobytes('P7'):
         # PAM header parsing is completely different.
         return read_pam_header(infile)
     # Expected number of tokens in header (3 for P4, 4 for P6)
     expected = 4
     pbm = ('P1', 'P4')
-    if type in pbm:
+    if _type in pbm:
         expected = 3
-    header = [type]
+    header = [_type]
 
     # We have to read the rest of the header byte by byte because the
     # final whitespace character (immediately following the MAXVAL in
@@ -3097,14 +3097,14 @@ def read_pnm_header(infile, supported=('P5', 'P6')):
     if not c.isspace():
         raise Error('expected header to end with whitespace, not %s' % c)
 
-    if type in pbm:
+    if _type in pbm:
         # synthesize a MAXVAL
         header.append(1)
-    depth = (1, 3)[type == strtobytes('P6')]
+    depth = (1, 3)[_type == strtobytes('P6')]
     return header[0], header[1], header[2], depth, header[3]
 
 
-def write_pnm(file, width, height, pixels, meta):
+def write_pnm(_file, width, height, pixels, meta):
     """Write a Netpbm PNM/PAM file."""
     bitdepth = meta['bitdepth']
     maxval = 2**bitdepth - 1
@@ -3135,7 +3135,7 @@ def write_pnm(file, width, height, pixels, meta):
         header = ('P7\nWIDTH %d\nHEIGHT %d\nDEPTH %d\nMAXVAL %d\n'
                   'TUPLTYPE %s\nENDHDR\n' %
                   (width, height, planes, maxval, tupltype))
-    file.write(strtobytes(header))
+    _file.write(strtobytes(header))
     # Values per row
     vpr = planes * width
     # struct format
@@ -3145,8 +3145,8 @@ def write_pnm(file, width, height, pixels, meta):
     else:
         fmt = fmt + 'B'
     for row in pixels:
-        file.write(struct.pack(fmt, *row))
-    file.flush()
+        _file.write(struct.pack(fmt, *row))
+    _file.flush()
 
 def color_triple(color):
     """

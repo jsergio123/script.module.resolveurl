@@ -19,7 +19,7 @@
 import re, base64
 from lib import helpers
 from resolveurl import common
-from resolveurl.resolver import ResolveUrl, ResolverError
+from resolveurl.resolver import ResolveUrl
 
 class StreamMoeResolver(ResolveUrl):
     name = "streammoe"

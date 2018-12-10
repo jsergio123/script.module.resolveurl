@@ -17,7 +17,8 @@
 '''
 
 from lib import helpers
-from resolveurl.resolver import ResolveUrl, ResolverError
+from resolveurl.resolver import ResolveUrl
+
 
 class DateMuleResolver(ResolveUrl):
     name = "datemule"
@@ -25,7 +26,12 @@ class DateMuleResolver(ResolveUrl):
     pattern = '(?://|\.)(datemule\.(?:co|com))/watch/(?:featured/)?([\w-]+)'
 
     def get_media_url(self, host, media_id):
-        return helpers.get_media_url(self.get_url(host, media_id), patterns=['''(?:hls|mp4)\s*:\s*\[?['"](?P<url>[^'"]+)''']).replace(' ', '%20')
+        return helpers.get_media_url(self.get_url(host, media_id),
+                                     patterns=['''(?:hls|mp4)\s*:\s*\[?['"](?P<url>[^'"]+)''']).replace(' ', '%20')
 
     def get_url(self, host, media_id):
         return self._default_get_url(host, media_id, 'https://www.datemule.com/watch/{media_id}')
+
+    def test(self):
+        yield self.test_url("https://www.datemule.com/watch/20G-4564af46157243",
+                            minsize=1000000)

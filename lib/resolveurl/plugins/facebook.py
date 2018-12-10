@@ -21,10 +21,10 @@ import urllib
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
 
+
 class FacebookResolver(ResolveUrl):
     name = "facebook"
     domains = ["facebook.com"]
-    pattern = '(?://|\.)(facebook\.com)/.+?video_id=([0-9a-zA-Z]+)'
 
     def __init__(self):
         self.net = common.Net()
@@ -60,8 +60,22 @@ class FacebookResolver(ResolveUrl):
     def get_url(self, host, media_id):
         return 'https://www.facebook.com/video/embed?video_id=%s' % media_id
 
+    def get_host_and_id(self, url):
+        patterns = ['(?://|\.)(facebook\.com)/.+?video_id=([0-9a-zA-Z]+)',
+                    '(?://|\.)(facebook\.com)/.+?/videos/.+?/([0-9a-zA-Z]+)'
+                    ]
+        for pattern in patterns:
+            r = re.search(pattern, url, re.I)
+            if r:
+                return r.groups()
+        return False
+
     @classmethod
     def get_settings_xml(cls):
         xml = super(cls, cls).get_settings_xml()
         xml.append('<setting label="Video Quality" id="%s_quality" type="enum" values="High|Standard" default="0" />' % (cls.__name__))
         return xml
+
+    def test(self):
+        yield self.test_url("https://www.facebook.com/video/embed?video_id=10200387320826253")
+        yield self.test_url("https://www.facebook.com/vietfunnyvideo/videos/e78c96b4/1371488622995266/")

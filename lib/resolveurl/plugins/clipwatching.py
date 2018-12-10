@@ -17,7 +17,11 @@
 """
 from __resolve_generic__ import ResolveGeneric
 
+
 class ClipWatchingResolver(ResolveGeneric):
     name = "clipwatching"
     domains = ['clipwatching.com']
     pattern = '(?://|\.)(clipwatching\.com)/(?:embed-)?(\w+)'
+
+    def test(self):
+        yield self.test_url("http://clipwatching.com/embed-efan0l2bpgwx.html")

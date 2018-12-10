@@ -28,9 +28,9 @@ abstractstaticmethod = abc.abstractmethod
 class abstractclassmethod(classmethod):
     __isabstractmethod__ = True
 
-    def __init__(self, callable):
+    def __init__(self, _callable):
         callable.__isabstractmethod__ = True
-        super(abstractclassmethod, self).__init__(callable)
+        super(abstractclassmethod, self).__init__(_callable)
 
 
 class ResolverError(Exception):
@@ -42,10 +42,38 @@ class ResolveUrl(object):
     '''
     Your plugin needs to implement the abstract methods in this interface if
     it wants to be able to resolve URLs
-    
+
     domains: (array) List of domains handled by this plugin. (Use ["*"] for universal resolvers.)
+    test_url: (class) Factory class to return on test generator method
     '''
     domains = ['localdomain']
+
+    class test_url():
+        '''
+        This is the factory class for the urls to be tested on given resolver. To porivde
+        testing facility you need to intantiate this class
+        '''
+        def __init__(self, url, minsize=None, minwidth=None, minheight=None, filetype=None):
+            """
+
+            Args:
+                url (str):a test url that the resolver will resolve into playable median
+               minsize (int): the minimum filesize that the returned media suppossed to have
+                    to prevent being rickrolled
+                minwidth (int): the minimum width of the returned media
+                minheight (int): the minimum height of the returned media
+                filtype (int): check if media file type is as expected ie, flv, mp4 or m3u8d
+
+            Returns:
+                If the media_id could be resolved, a string containing the direct
+                URL to the media file, if not, raises ResolverError.
+            """
+            self.url = url
+            self.minsize = minsize
+            self.minheight = minheight
+            self.minwidth = minwidth
+            self.filetype = filetype
+
 
     @abc.abstractmethod
     def get_media_url(self, host, media_id):
@@ -104,7 +132,7 @@ class ResolveUrl(object):
         """
         if isinstance(host, basestring):
             host = host.lower()
-        
+
         if url:
             return re.search(self.pattern, url, re.I) is not None
         else:
@@ -167,9 +195,15 @@ class ResolveUrl(object):
 
     @classmethod
     def _get_priority(cls):
-        try: return int(cls.get_setting('priority'))
-        except: return 100
-    
+        try:
+            return int(cls.get_setting('priority'))
+        except Exception:
+            return 10
+
+    def test(self):
+        return
+        yield
+
     @classmethod
     def _is_enabled(cls):
         # default behaviour is enabled is True if resolver is enabled, or has login set to "true", or doesn't have the setting
@@ -180,11 +214,12 @@ class ResolveUrl(object):
             for domain in self.domains:
                 if host in domain:
                     return domain
-        
+
         return host
-    
+
     def _default_get_url(self, host, media_id, template=None):
-        if template is None: template = 'http://{host}/embed-{media_id}.html'
+        if template is None:
+            template = 'http://{host}/embed-{media_id}.html'
         host = self._get_host(host)
         return template.format(host=host, media_id=media_id)
 
@@ -199,7 +234,7 @@ class ResolveUrl(object):
                 old_len = common.file_length(py_path, key)
                 new_len = int(headers.get('Content-Length', 0))
                 py_name = os.path.basename(py_path)
-                
+
                 if old_etag != new_etag or old_len != new_len:
                     common.logger.log('Updating %s: |%s|%s|%s|%s|' % (py_name, old_etag, new_etag, old_len, new_len))
                     self.set_setting('etag', new_etag)
@@ -207,7 +242,7 @@ class ResolveUrl(object):
                     if new_py:
                         if key:
                             new_py = common.decrypt_py(new_py, key)
-                            
+
                         if new_py and 'import' in new_py:
                             with open(py_path, 'w') as f:
                                 f.write(new_py.encode('utf-8'))

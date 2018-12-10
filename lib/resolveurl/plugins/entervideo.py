@@ -20,6 +20,7 @@
 """
 from __resolve_generic__ import ResolveGeneric
 
+
 class EnterVideoResolver(ResolveGeneric):
     name = "entervideo"
     domains = ['entervideo.net']
@@ -27,3 +28,6 @@ class EnterVideoResolver(ResolveGeneric):
 
     def get_url(self, host, media_id):
         return self._default_get_url(host, media_id, template='http://entervideo.net/watch/{media_id}')
+
+    def test(self):
+        yield self.test_url("http://entervideo.net/watch/24f1434f5afb40e", minsize=285000000)

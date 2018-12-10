@@ -48,7 +48,7 @@ def pbkdf2(password, salt, iterations, keySize, PRF=HMAC_SHA1):
         # Calculate F(P, salt, iterations, i)
         F = prf(salt+pack('>i',block)) # i is packed into 4 big-endian bytes
         U = prf(salt+pack('>i',block)) # i is packed into 4 big-endian bytes
-        for count in range(2,iterations+1):
+        for _ in range(2,iterations+1):
             U = prf(U)
             F = xor(F,U)
         key = key + F

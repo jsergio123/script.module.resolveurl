@@ -23,15 +23,16 @@ from urlparse import urlparse
 from resolveurl import common
 from resolveurl.resolver import ResolverError
 
+
 def get_hidden(html, form_id=None, index=None, include_submit=True):
     hidden = {}
     if form_id:
         pattern = '''<form [^>]*(?:id|name)\s*=\s*['"]?%s['"]?[^>]*>(.*?)</form>''' % (form_id)
     else:
         pattern = '''<form[^>]*>(.*?)</form>'''
-    
+
     html = cleanse_html(html)
-        
+
     for i, form in enumerate(re.finditer(pattern, html, re.DOTALL | re.I)):
         common.logger.log(form.group(1))
         if index is None or i == index:
@@ -40,7 +41,7 @@ def get_hidden(html, form_id=None, index=None, include_submit=True):
                 match1 = re.search('''value\s*=\s*['"]([^'"]*)''', field.group(0))
                 if match and match1:
                     hidden[match.group(1)] = match1.group(1)
-            
+
             if include_submit:
                 match = re.search('''<input [^>]*type=['"]?submit['"]?[^>]*>''', form.group(1))
                 if match:
@@ -48,14 +49,15 @@ def get_hidden(html, form_id=None, index=None, include_submit=True):
                     value = re.search('''value\s*=\s*['"]([^'"]*)''', match.group(0))
                     if name and value:
                         hidden[name.group(1)] = value.group(1)
-            
+
     common.logger.log_debug('Hidden fields are: %s' % (hidden))
     return hidden
+
 
 def pick_source(sources, auto_pick=None):
     if auto_pick is None:
         auto_pick = common.get_setting('auto_pick') == 'true'
-        
+
     if len(sources) == 1:
         return sources[0][1]
     elif len(sources) > 1:
@@ -70,8 +72,10 @@ def pick_source(sources, auto_pick=None):
     else:
         raise ResolverError(common.i18n('no_video_link'))
 
+
 def append_headers(headers):
     return '|%s' % '&'.join(['%s=%s' % (key, urllib.quote_plus(headers[key])) for key in headers])
+
 
 def get_packed_data(html):
     packed_data = ''
@@ -80,22 +84,24 @@ def get_packed_data(html):
             js_data = jsunpack.unpack(match.group(1))
             js_data = js_data.replace('\\', '')
             packed_data += js_data
-        except:
+        except Exception:
             pass
-        
+
     return packed_data
+
 
 def sort_sources_list(sources):
     if len(sources) > 1:
         try:
             sources.sort(key=lambda x: int(re.sub("\D", "", x[0])), reverse=True)
-        except:
+        except Exception:
             common.logger.log_debug('Scrape sources sort failed |int(re.sub("\D", "", x[0])|')
             try:
                 sources.sort(key=lambda x: re.sub("[^a-zA-Z]", "", x[0].lower()))
-            except:
+            except Exception:
                 common.logger.log_debug('Scrape sources sort failed |re.sub("[^a-zA-Z]", "", x[0].lower())|')
     return sources
+
 
 def parse_sources_list(html):
     sources = []
@@ -104,10 +110,12 @@ def parse_sources_list(html):
         sources = [(match[1], match[0].replace('\/', '/')) for match in re.findall('''['"]?file['"]?\s*:\s*['"]([^'"]+)['"][^}]*['"]?label['"]?\s*:\s*['"]([^'"]*)''', match.group(1), re.DOTALL)]
     return sources
 
+
 def parse_html5_source_list(html):
     label_attrib = 'type' if not re.search('''<source\s+src\s*=.*?data-res\s*=.*?/\s*>''', html) else 'data-res'
     sources = [(match[1], match[0].replace('\/', '/')) for match in re.findall('''<source\s+src\s*=\s*['"]([^'"]+)['"](?:.*?''' + label_attrib + '''\s*=\s*['"](?:video/)?([^'"]+)['"])''', html, re.DOTALL)]
     return sources
+
 
 def parse_smil_source_list(smil):
     sources = []
@@ -119,9 +127,11 @@ def parse_smil_source_list(smil):
         sources += [(label, '%s playpath=%s' % (base, i.group(1)))]
     return sources
 
+
 def scrape_sources(html, result_blacklist=None, scheme='http', patterns=None, generic_patterns=True):
-    if patterns is None: patterns = []
-    
+    if patterns is None:
+        patterns = []
+
     def __parse_to_list(_html, regex):
         _blacklist = ['.jpg', '.jpeg', '.gif', '.png', '.js', '.css', '.htm', '.html', '.php', '.srt', '.sub', '.xml', '.swf', '.vtt', '.mpd']
         _blacklist = set(_blacklist + result_blacklist)
@@ -132,15 +142,17 @@ def scrape_sources(html, result_blacklist=None, scheme='http', patterns=None, ge
             stream_url = match['url'].replace('&amp;', '&')
             file_name = urlparse(stream_url[:-1]).path.split('/')[-1] if stream_url.endswith("/") else urlparse(stream_url).path.split('/')[-1]
             blocked = not file_name or any(item in file_name.lower() for item in _blacklist)
-            if stream_url.startswith('//'): stream_url = scheme + ':' + stream_url
+            if stream_url.startswith('//'):
+                stream_url = scheme + ':' + stream_url
             if '://' not in stream_url or blocked or (stream_url in streams) or any(stream_url == t[1] for t in source_list):
                 continue
-    
+
             label = match.get('label', file_name)
-            if label is None: label = file_name
+            if label is None:
+                label = file_name
             labels.append(label)
             streams.append(stream_url)
-            
+
         matches = zip(labels, streams)
         if matches:
             common.logger.log_debug('Scrape sources |%s| found |%s|' % (regex, matches))
@@ -150,7 +162,7 @@ def scrape_sources(html, result_blacklist=None, scheme='http', patterns=None, ge
         result_blacklist = []
     elif isinstance(result_blacklist, str):
         result_blacklist = [result_blacklist]
-        
+
     html = html.replace("\/", "/")
     html += get_packed_data(html)
 
@@ -164,9 +176,9 @@ def scrape_sources(html, result_blacklist=None, scheme='http', patterns=None, ge
         source_list += __parse_to_list(html, '''param\s+name\s*=\s*"src"\s*value\s*=\s*"(?P<url>[^"]+)''')
     for regex in patterns:
         source_list += __parse_to_list(html, regex)
-        
+
     source_list = list(set(source_list))
-    
+
     common.logger.log(source_list)
     source_list = sort_sources_list(source_list)
 
@@ -174,7 +186,8 @@ def scrape_sources(html, result_blacklist=None, scheme='http', patterns=None, ge
 
 
 def get_media_url(url, result_blacklist=None, patterns=None, generic_patterns=True):
-    if patterns is None: patterns = []
+    if patterns is None:
+        patterns = []
     scheme = urlparse(url).scheme
     if result_blacklist is None:
         result_blacklist = []
@@ -197,17 +210,20 @@ def get_media_url(url, result_blacklist=None, patterns=None, generic_patterns=Tr
     source = pick_source(source_list)
     return source + append_headers(headers)
 
+
 def cleanse_html(html):
     for match in re.finditer('<!--(.*?)-->', html, re.DOTALL):
-        if match.group(1)[-2:] != '//': html = html.replace(match.group(0), '')
-    
+        if match.group(1)[-2:] != '//':
+            html = html.replace(match.group(0), '')
+
     html = re.sub('''<(div|span)[^>]+style=["'](visibility:\s*hidden|display:\s*none);?["']>.*?</\\1>''', '', html, re.I | re.DOTALL)
     return html
+
 
 def get_dom(html, tag):
     start_str = '<%s' % (tag.lower())
     end_str = '</%s' % (tag.lower())
-    
+
     results = []
     html = html.lower()
     while html:
@@ -216,9 +232,10 @@ def get_dom(html, tag):
         pos = html.find(start_str, start + 1)
         while pos < end and pos != -1:
             tend = html.find(end_str, end + len(end_str))
-            if tend != -1: end = tend
+            if tend != -1:
+                end = tend
             pos = html.find(start_str, pos + 1)
-        
+
         if start == -1 and end == -1:
             break
         elif start > -1 and end > -1:
@@ -229,9 +246,8 @@ def get_dom(html, tag):
             result = html[start:]
         else:
             break
-            
+
         results.append(result)
         html = html[start + len(start_str):]
-    
-    return results
 
+    return results

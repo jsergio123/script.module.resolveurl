@@ -18,7 +18,7 @@
 
 from lib import helpers
 from resolveurl import common
-from resolveurl.resolver import ResolveUrl, ResolverError
+from resolveurl.resolver import ResolveUrl
 
 
 class GorillavidResolver(ResolveUrl):
@@ -44,3 +44,6 @@ class GorillavidResolver(ResolveUrl):
 
     def get_url(self, host, media_id):
         return 'http://gorillavid.in/%s' % (media_id)
+
+    def test__(self):
+        yield self.test_url("https://gorillavid.in/7h11nx33fekf")
