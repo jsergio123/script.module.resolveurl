@@ -1,6 +1,6 @@
 """
     Kodi resolveurl plugin
-    Copyright (C) 2016  script.module.resolveurl
+    Copyright (C) 2019  script.module.resolveurl
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,10 +15,49 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __resolve_generic__ import ResolveGeneric
+import requests
+from urlparse import urlparse
 
+from lib import helpers
+from resolveurl.common import RAND_UA
+from resolveurl.resolver import ResolveUrl, ResolverError
 
-class VidToDoResolver(ResolveGeneric):
-    name = 'vidtodo'
-    domains = ['vidtodo.com', 'vidtodo.me']
-    pattern = '(?://|\.)(vidtodo\.(?:com|me))/(?:embed-)?([0-9a-zA-Z]+)'
+class VidToDoResolver(ResolveUrl):
+    name = 'Vidtodo'
+    domains = ['vidotodo.com', 'vidtodo.com', 'vidtodo.me']
+    pattern = '(?://|\.)((?:vidtodo|vidotodo)\.(?:com|me))/(?:embed-)?([0-9a-zA-Z]+)'
+
+    def __init__(self):
+        self.session = requests.Session()
+        self.session.headers.update(
+            {
+                'User-Agent': RAND_UA,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Upgrade-Insecure-Requests': '1',
+                'DNT': '1'
+            }
+        )
+
+    def get_media_url(self, host, media_id):
+        web_url = self.get_url(host, media_id)
+        r = self.session.get(web_url)
+        if r.ok:
+            sources = helpers.scrape_sources(
+                r.text, generic_patterns=False, patterns=['''sources.*?\[['"](?P<url>.*?)['"]''']
+            )
+            if sources:
+                # Headers for requesting media (copied from Firefox).
+                parsedUrl = urlparse(r.url)
+                kodiHeaders = {
+                    'User-Agent': self.session.headers['User-Agent'],
+                    'Accept': 'video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5',
+                    'Referer': '%s://%s/' % (parsedUrl.scheme, parsedUrl.netloc),
+                    'Cookie': '; '.join(key+'='+val for key, val in self.session.cookies.get_dict().iteritems())
+                }
+                return helpers.pick_source(sources) + helpers.append_headers(kodiHeaders)
+
+        raise ResolverError('Unable to locate video')
+
+    def get_url(self, host, media_id):
+        return self._default_get_url(host, media_id, template='https://{host}/{media_id}')
