@@ -1,3 +1,15 @@
+[B]Version 5.0.27 (January 18, 2019)[/B]
+- Code Base Changes:
+    - none
+- Resolvers Added:
+    - none
+- Resolvers Fixed/Updated:
+    - Openload
+- Resolvers Removed
+    - none
+- Languages Added/Updated
+    - none
+
 [B]Version 5.0.26 (January 02, 2019)[/B]
 - Code Base Changes:
     - roll back progress dialog window changes
