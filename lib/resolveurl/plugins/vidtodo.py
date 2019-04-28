@@ -46,11 +46,11 @@ class VidToDoResolver(ResolveUrl):
             sources = helpers.scrape_sources(
                 r.content,
                 generic_patterns = False,
-                patterns = (
+                patterns = [
                     '''sources.*?\[['"](?P<url>.*?)['"]''',
                     '''sources.*?file:.*?['"](?P<url>.*?)['"](?:.*?label.*?['"](?P<label>.*?)['"])?''',
                     '''updateSrc.*?src:.*?['"](?P<url>.*?)['"](?:.*?label.*?['"](?P<label>.*?)['"])?'''
-                )
+                ]
             )
             if sources:
                 # Headers for requesting media (copied from Firefox).
