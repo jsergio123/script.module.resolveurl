@@ -23,8 +23,8 @@ from resolveurl.resolver import ResolveUrl, ResolverError
 
 class PowVideoResolver(ResolveUrl):
     name = "powvideo"
-    domains = ["powvideo.net", "powvideo.cc"]
-    pattern = '(?://|\.)(powvideo\.(?:net|cc))/(?:embed-|iframe-|preview-)?([0-9a-zA-Z]+)'
+    domains = ["powvideo.net", "powvideo.cc", "povvideo.net"]
+    pattern = '(?://|\.)((?:powvideo|povvideo)\.(?:net|cc))/(?:embed-|iframe-|preview-)?([0-9a-zA-Z]+)'
 
     def __init__(self):
         self.net = common.Net()
