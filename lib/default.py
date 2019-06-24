@@ -20,6 +20,7 @@ import sys
 from resolveurl.lib import kodi
 from resolveurl.lib import log_utils
 from resolveurl.lib import cache
+from resolveurl import display_settings
 from resolveurl.lib.url_dispatcher import URL_Dispatcher
 
 logger = log_utils.Logger.get_logger()
@@ -33,7 +34,7 @@ def __enum(**enums):
 
 MODES = __enum(
     AUTH_PM='auth_pm', RESET_PM='reset_pm', AUTH_RD='auth_rd', RESET_RD='reset_rd', RESET_CACHE='reset_cache',
-    AUTH_AD='auth_ad', RESET_AD='reset_ad', AUTH_LS='auth_ls', RESET_LS='reset_ls'
+    AUTH_AD='auth_ad', RESET_AD='reset_ad', AUTH_LS='auth_ls', RESET_LS='reset_ls', DISPLAY_SETTINGS='main'
 )
 
 
@@ -119,6 +120,12 @@ def reset_ls():
     ls = linksnappy.LinksnappyResolver()
     ls.reset_authorization()
     kodi.notify(msg=kodi.i18n('ls_auth_reset'), duration=5000)
+
+
+@url_dispatcher.register(MODES.DISPLAY_SETTINGS)
+def open_settings_window():
+
+    return display_settings()
 
 
 def main(argv=None):
