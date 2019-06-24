@@ -20,7 +20,6 @@ import sys
 from resolveurl.lib import kodi
 from resolveurl.lib import log_utils
 from resolveurl.lib import cache
-from resolveurl import display_settings
 from resolveurl.lib.url_dispatcher import URL_Dispatcher
 
 logger = log_utils.Logger.get_logger()
@@ -124,6 +123,8 @@ def reset_ls():
 
 @url_dispatcher.register(MODES.DISPLAY_SETTINGS)
 def open_settings_window():
+
+    from resolveurl import display_settings
 
     return display_settings()
 
