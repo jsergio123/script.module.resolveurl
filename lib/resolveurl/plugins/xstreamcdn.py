@@ -11,8 +11,8 @@ from resolveurl.resolver import ResolveUrl, ResolverError
  
 class XStreamCDNResolver(ResolveUrl):
     name = 'XStreamCDN'
-    domains = ["xstreamcdn.com", "gcloud.live", "there.to"]
-    pattern = '(?://|\.)((?:xstreamcdn\.com|gcloud\.live|there\.to))/v/([\w-]+)' # Host and media-id pattern.
+    domains = ["xstreamcdn.com", "gcloud.live", "there.to", "animeproxy.info"]
+    pattern = '(?://|\.)((?:xstreamcdn\.com|gcloud\.live|there\.to|animeproxy\.info))/v/([\w-]+)' # Host and media-id pattern.
  
     def __init__(self):
         self.net = Net()
