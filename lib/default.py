@@ -33,7 +33,7 @@ def __enum(**enums):
 
 MODES = __enum(
     AUTH_PM='auth_pm', RESET_PM='reset_pm', AUTH_RD='auth_rd', RESET_RD='reset_rd', RESET_CACHE='reset_cache',
-    AUTH_AD='auth_ad', RESET_AD='reset_ad', AUTH_LS='auth_ls', RESET_LS='reset_ls'
+    AUTH_AD='auth_ad', RESET_AD='reset_ad', AUTH_LS='auth_ls', RESET_LS='reset_ls', DISPLAY_SETTINGS='main'
 )
 
 
@@ -119,6 +119,14 @@ def reset_ls():
     ls = linksnappy.LinksnappyResolver()
     ls.reset_authorization()
     kodi.notify(msg=kodi.i18n('ls_auth_reset'), duration=5000)
+
+
+@url_dispatcher.register(MODES.DISPLAY_SETTINGS)
+def open_settings_window():
+
+    from resolveurl import display_settings
+
+    return display_settings()
 
 
 def main(argv=None):
