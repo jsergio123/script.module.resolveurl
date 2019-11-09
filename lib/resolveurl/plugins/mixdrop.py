@@ -20,7 +20,7 @@ from lib import jsunpack
 class MixdropResolver(ResolveUrl):
     name = "mixdrop"
     domains = ["mixdrop.co"]
-    pattern = '//(mixdrop\.co)/(?:f|e)/(.+)'
+    pattern = r'(?://|\.)(mixdrop\.co)/(?:f|e)/(\w+)'
 
     def __init__(self):
         self.net = common.Net()
@@ -39,4 +39,4 @@ class MixdropResolver(ResolveUrl):
             raise ResolverError("Video not found")
 
     def get_url(self, host, media_id):
-        return 'https://{0}/e/{1}'.format(host, media_id)
+        return self._default_get_url(host, media_id, template='https://{host}/e/{media_id}')
