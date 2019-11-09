@@ -1,29 +1,23 @@
 """
-    OVERALL CREDIT TO:
-        t0mm0, Eldorado, VOINAGE, BSTRDMKR, tknorris, smokdpi, TheHighway
-
-    urlresolver XBMC Addon
-    Copyright (C) 2011 t0mm0
-
+    Kodi resolveurl plugin
+    Copyright (C) 2019
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import re
-from urlresolver import common
-from urlresolver.resolver import UrlResolver, ResolverError
+from resolveurl import common
+from resolveurl.resolver import ResolveUrl, ResolverError
 from lib import jsunpack
 
-class MixdropResolver(UrlResolver):
+class MixdropResolver(ResolveUrl):
     name = "mixdrop"
     domains = ["mixdrop.co"]
     pattern = '//(mixdrop\.co)/(?:f|e)/(.+)'
@@ -39,7 +33,7 @@ class MixdropResolver(UrlResolver):
         try:
             r = re.search('\s+?(eval\(function\(p,a,c,k,e,d\).+)\s+?', html)
             r = jsunpack.unpack(r.group(1))
-            r = re.search("vsrc=\"([^\"]+)", r.replace('\\', ''))
+            r = re.search('vsrc="([^"]+)', r.replace('\\', ''))
             return "https:" + r.group(1)
         except:
             raise ResolverError("Video not found")
