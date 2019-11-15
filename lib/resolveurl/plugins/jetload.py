@@ -36,31 +36,8 @@ class JetloadResolver(ResolveUrl):
         headers = {'User-Agent': common.RAND_UA, 'Referer': web_url}
         html = self.net.http_GET(web_url, headers=headers).content.encode('utf-8')
 
-        try:
-            url = re.findall('source src="(.*?)"', html)[0]
-            if '.m3u8' in url:
-                m3u = self.net.http_GET(url, headers=headers).content
-            else:
-                return url + helpers.append_headers(headers)
-        except:
-            jsons = json.loads(html)
-            hostname = jsons['server']['hostname']
-            filename = jsons['file']['file_name']
-            url = hostname + '/v2/schema/archive/' + filename + '/master.m3u8'
-            m3u = self.net.http_GET(url, headers=headers).content
-
-        streams = re.findall(r'(.*?)\.m3u8', m3u)
-        qualitys = re.findall(r'RESOLUTION=(.*?)\n', m3u)
-
-        stream = (streams[len(streams) - 1] + '.m3u8').replace(' ', '')
-        if '1080' in qualitys[len(streams) - 1]:
-            quality = '1080p'
-        elif '720' in qualitys[len(streams) - 1]:
-            quality = '720p'
-        else:
-            quality = 'SD'
-
-        return url + '?quali=' + quality + helpers.append_headers(headers)
+        r = re.search('source src="(.*?)"', html)
+        if r:return r.group(1) + helpers.append_headers(headers)
 
         raise ResolverError('Video cannot be located.')
 
