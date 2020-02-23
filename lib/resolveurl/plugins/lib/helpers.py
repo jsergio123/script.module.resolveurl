@@ -208,15 +208,15 @@ def get_dom(html, tag):
     end_str = '</%s' % (tag.lower())
     
     results = []
-    html = html.lower()
-    while html:
-        start = html.find(start_str)
-        end = html.find(end_str, start)
-        pos = html.find(start_str, start + 1)
+    lowerhtml = html.lower()
+    while lowerhtml:
+        start = lowerhtml.find(start_str)
+        end = lowerhtml.find(end_str, start)
+        pos = lowerhtml.find(start_str, start + 1)
         while pos < end and pos != -1:
-            tend = html.find(end_str, end + len(end_str))
+            tend = lowerhtml.find(end_str, end + len(end_str))
             if tend != -1: end = tend
-            pos = html.find(start_str, pos + 1)
+            pos = lowerhtml.find(start_str, pos + 1)
         
         if start == -1 and end == -1:
             break
@@ -230,7 +230,7 @@ def get_dom(html, tag):
             break
             
         results.append(result)
-        html = html[start + len(start_str):]
+        lowerhtml = lowerhtml[start + len(start_str):]
     
     return results
 
