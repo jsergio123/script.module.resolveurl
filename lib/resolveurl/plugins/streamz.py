@@ -37,6 +37,8 @@ class StreamzResolver(ResolveUrl):
         html += helpers.get_packed_data(html)
         sources = helpers.scrape_sources(html)
 
+        sources = [('mp4', self.net.http_HEAD(sources[0][1]).get_url())]
+
         if sources:
 
             return helpers.pick_source(sources) + helpers.append_headers(headers)
