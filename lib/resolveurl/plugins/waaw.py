@@ -29,7 +29,6 @@ class WaawResolver(ResolveUrl):
         self.net = common.Net()
     
     def get_media_url(self, host, media_id):
-        web_url = self.get_url(host, media_id)
         headers = {'User-Agent': common.FF_USER_AGENT,
                    'x-requested-with': 'XMLHttpRequest'}
         params = (
