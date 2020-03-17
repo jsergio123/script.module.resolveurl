@@ -42,7 +42,6 @@ class WaawResolver(ResolveUrl):
         params = urllib.urlencode(params)
         rurl = "https://hqq.tv/player/get_md5.php?" + params  
         str_url = self.net.http_HEAD(rurl, headers=headers).get_url()
-        headers.pop('x-requested-with')
         return str_url+'.mp4.m3u8' + helpers.append_headers(headers)
     
     def get_url(self, host, media_id):
