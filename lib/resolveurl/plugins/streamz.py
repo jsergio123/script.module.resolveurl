@@ -41,6 +41,8 @@ class StreamzResolver(ResolveUrl):
 
         if sources:
 
+            headers.update({'Referer': web_url})
+
             return helpers.pick_source(sources) + helpers.append_headers(headers)
 
         else:
