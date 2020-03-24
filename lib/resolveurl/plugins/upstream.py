@@ -33,7 +33,7 @@ class UpStreamResolver(ResolveGeneric):
         html = self.net.http_GET(web_url, headers=headers).content
         sources = helpers.scrape_sources(html)
         if sources:
-            return helpers.pick_source(sources)+ helpers.append_headers(headers) +'&auth=SSL/TLS&verifypeer=false'
+            return helpers.pick_source(sources)+ helpers.append_headers(headers)
                 
         raise ResolverError("Video not found")
 
