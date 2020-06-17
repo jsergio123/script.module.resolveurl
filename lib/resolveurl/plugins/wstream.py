@@ -26,7 +26,7 @@ class WstreamResolver(ResolveGeneric):
 
     def get_media_url(self, host, media_id):
         return helpers.get_media_url(self.get_url(host, media_id),
-                                     patterns=[r'''sources:\s*\[{file:\s*"(?P<url>[^"]+)'''],
+                                     patterns=[r'''sources:\[\"(?P<url>[^\"]+)\"\]'''],
                                      generic_patterns=False)
 
     def get_url(self, host, media_id):
