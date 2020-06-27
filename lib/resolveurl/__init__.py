@@ -309,7 +309,7 @@ def _update_settings_xml():
     if old_xml != new_xml:
         common.logger.log_debug('Updating Settings XML')
         try:
-            with open(common.settings_file, 'w') as f:
+            with open(common.settings_file, 'w', encoding='utf-8') as f:
                 f.write(new_xml)
         except:
             raise
