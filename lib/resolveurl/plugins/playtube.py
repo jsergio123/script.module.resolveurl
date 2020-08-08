@@ -16,19 +16,29 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import re
 from resolveurl.plugins.lib import helpers
-from resolveurl.plugins.__resolve_generic__ import ResolveGeneric
+from resolveurl.plugins.lib import jsunpack
+from resolveurl import common
+from resolveurl.resolver import ResolveUrl, ResolverError
 
 
-class PlayTubeResolver(ResolveGeneric):
+class PlayTubeResolver(ResolveUrl):
     name = "playtube"
     domains = ["playtube.ws"]
     pattern = r'(?://|\.)(playtube\.ws)/(?:embed-)?([0-9a-zA-Z]+)'
 
     def get_media_url(self, host, media_id):
-        return helpers.get_media_url(self.get_url(host, media_id),
-                                     patterns=[r'''sources\s*:\s*\["(?P<url>[^"]+)'''],
-                                     generic_patterns=False)
+        web_url = self.get_url(host, media_id)
+        headers = {'User-Agent': common.RAND_UA, 'Referer': web_url}
+        html = self.net.http_GET(web_url, headers=headers).content
+        r = re.search(r"text/javascript'>(eval.*?)\s*</script>", html, re.DOTALL)
+        if r:
+            html = jsunpack.unpack(r.group(1))
+            src = re.search(r'file:"([^"]+)"', html)
+            if src:
+                return src.group(1) + helpers.append_headers(headers)
+        raise ResolverError('Video cannot be located.')
 
     def get_url(self, host, media_id):
         return self._default_get_url(host, media_id, template='https://{host}/embed-{media_id}.html')
