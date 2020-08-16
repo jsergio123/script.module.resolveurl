@@ -29,17 +29,23 @@ class AparatResolver(ResolveUrl):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
-        headers = {'Referer': web_url, 'User-Agent': common.FF_USER_AGENT}
+        headers = {'User-Agent': common.FF_USER_AGENT}
         html = self.net.http_GET(web_url, headers=headers).content
-
-        match = re.search(r'&hash=([^&]+)', html)
-        if match:
-            web_url = 'https://{0}/dl?op=download_orig&id={1}&mode=o&hash={2}'.format(host, media_id, match.group(1))
-            html = self.net.http_GET(web_url, headers=headers).content
-            r = re.search(r'<a\s*href="([^"]+)[^>]+>Direct', html)
-            if r:
-                return r.group(1) + helpers.append_headers({'User-Agent': common.FF_USER_AGENT})
-
+        url = re.search(r'sources.*?(http[^"]+)',html)
+        if url:
+            html = self.net.http_GET(url.group(1), headers=headers).content
+            html = html.replace('iframes', 'index')
+            sources = re.findall('RESOLUTION=\d+x([\d]+).*?CODECS=".*?URI="([^"]+)', html, re.IGNORECASE)
+            headers = {'Referer': 'https://aparat.cam/', 'Origin': 'https://aparat.cam', 'User-Agent': common.FF_USER_AGENT, 'Accept': '*/*'}
+            return helpers.pick_source(helpers.sort_sources_list(sources)) + helpers.append_headers(headers)
+        else:
+            match = re.search(r'&hash=([^&]+)', html)
+            if match:
+                web_url = 'https://{0}/dl?op=download_orig&id={1}&mode=o&hash={2}'.format(host, media_id, match.group(1))
+                html = self.net.http_GET(web_url, headers=headers).content
+                r = re.search(r'<a\s*href="([^"]+)[^>]+>Direct', html)
+                if r:
+                    return r.group(1) + helpers.append_headers({'User-Agent': common.FF_USER_AGENT})
         raise ResolverError('Video Link Not Found')
 
     def get_url(self, host, media_id):
