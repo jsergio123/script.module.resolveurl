@@ -1,6 +1,6 @@
 """
     Plugin for ResolveUrl
-    Copyright (C) 2020 gujal
+    Copyright (C) 2020 Anis
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,8 @@
 """
 
 from resolveurl.plugins.lib import helpers
-import re, base64
+import re
+import base64
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
 
