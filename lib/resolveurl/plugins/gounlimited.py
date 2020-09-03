@@ -17,6 +17,7 @@
 """
 import re
 from resolveurl.plugins.__resolve_generic__ import ResolveGeneric
+
 from resolveurl import common
 from resolveurl.plugins.lib import jsunpack
 from resolveurl.plugins.lib import helpers
