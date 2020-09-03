@@ -16,12 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import re
-from resolveurl.resolver import ResolveUrl, ResolverError
+from resolveurl.plugins.__resolve_generic__ import ResolveGeneric
 from resolveurl import common
 from resolveurl.plugins.lib import jsunpack
 from resolveurl.plugins.lib import helpers
 
-class GoUnlimitedResolver(ResolveUrl):
+class GoUnlimitedResolver(ResolveGeneric):
     name = "gounlimited.to"
     domains = ['gounlimited.to']
     pattern = r'(?://|\.)(gounlimited\.to)/(?:embed-)?([0-9a-zA-Z]+)'
@@ -36,6 +36,6 @@ class GoUnlimitedResolver(ResolveUrl):
             html = jsunpack.unpack(r.group(1))
             sources = helpers.scrape_sources(html)
             return helpers.pick_source(sources) + helpers.append_headers(headers)
-        raise ResolverError('Video cannot be located.')
+
     def get_url(self, host, media_id):
         return self._default_get_url(host, media_id, template='https://{host}/embed-{media_id}.html')
