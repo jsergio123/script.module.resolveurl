@@ -1,14 +1,12 @@
-Version 5.1.6 (August 16, 2020)
+Version 5.1.8 (September 7, 2020)
 - Code Base Changes:
     - None
 
 - Resolvers Added:
-    - Doodstream
-    - Vidup
-    - Vidbom
+    - None
  
 - Resolvers Fixed/Updated:
-    - vidstreaming
+    - Premiumize
 
 - Resolvers Removed
     - None
