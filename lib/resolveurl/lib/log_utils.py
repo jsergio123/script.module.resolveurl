@@ -19,7 +19,14 @@ import json
 import xbmc
 import xbmcaddon
 import six
-from xbmc import LOGDEBUG, LOGERROR, LOGNOTICE, LOGWARNING
+
+LOGDEBUG = xbmc.LOGDEBUG
+LOGERROR = xbmc.LOGERROR
+LOGWARNING = xbmc.LOGWARNING
+try:
+    LOGNOTICE = xbmc.LOGNOTICE
+except AttributeError:
+    LOGNOTICE = xbmc.LOGINFO
 
 addonsmr = xbmcaddon.Addon('script.module.resolveurl')
 
