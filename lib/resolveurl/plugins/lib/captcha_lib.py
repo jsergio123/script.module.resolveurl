@@ -46,9 +46,9 @@ def get_response(img,x=450,y=0,w=400,h=130):
 def write_img(url=None,bin=None):
     img = os.path.join(common.profile_path, IMG_FILE)
     if url:
-        bin = net.http_GET(url).content
+        bin = net.http_GET(url).content.encode()
     with open(img, 'wb') as file:
-        file.write(bin)
+        discard = file.write(bin)
     return img
 
 
@@ -95,7 +95,9 @@ def do_solvemedia_captcha(captcha_url):
         html = net.http_GET("http://api.solvemedia.com%s" % alt_frame.group(1)).content
         alt_puzzle = re.search(r'<div\s+id="typein">\s*<img\s+src="data:image/png;base64,([^"]+)', html, re.DOTALL)
         if alt_puzzle:
-            captcha_img = write_img(bin=alt_puzzle.group(1).decode('base64'))
+            captcha_img = write_img(bin=base64.b64decode(alt_puzzle.group(1)))
+        else:
+           raise Exception('captcha_error')
     else:
         captcha_img = write_img("http://api.solvemedia.com%s" % re.search('<img src="(/papi/media[^"]+)"', html).group(1))
 
