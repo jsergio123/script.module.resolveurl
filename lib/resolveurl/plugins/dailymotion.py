@@ -39,9 +39,10 @@ class DailymotionResolver(ResolveUrl):
             raise ResolverError(js_result.get('error').get('title'))
 
         quals = js_result.get('qualities')
+
         if quals:
             mbtext = self.net.http_GET(quals.get('auto')[0].get('url'), headers=headers).content
-            sources = re.findall('NAME="(?P<label>[^"]+)",PROGRESSIVE-URI="(?P<url>[^#]+)', mbtext)
+            sources = re.findall('NAME="(?P<label>[^"]+)"(?:,PROGRESSIVE-URI="|\n)?(?P<url>[^#]+)', mbtext)
             return helpers.pick_source(helpers.sort_sources_list(sources)) + helpers.append_headers(headers)
         raise ResolverError('No playable video found.')
 
