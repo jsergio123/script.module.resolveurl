@@ -15,29 +15,32 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from lib import helpers
+
+from resolveurl.plugins.lib import helpers
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
 
 
 class StreamzResolver(ResolveUrl):
     name = "streamz"
-    domains = ['streamz.cc']
-    pattern = r'(?://|\.)(streamz\.cc)/([0-9a-zA-Z]+)'
-
-    def __init__(self):
-        self.net = common.Net()
+    domains = ['streamz.cc', "streamz.vg", "streamzz.to"]
+    pattern = r'(?://|\.)(streamzz?\.(?:cc|vg|to))/([0-9a-zA-Z]+)'
 
     def get_media_url(self, host, media_id):
+
         web_url = self.get_url(host, media_id)
-        headers = {'User-Agent': common.RAND_UA}
+        headers = {'User-Agent': common.CHROME_USER_AGENT}
         html = self.net.http_GET(web_url, headers=headers).content
-        if 'File not found, sorry!' not in html:
-            sources = helpers.scrape_sources(html)
-            if sources:
-                return helpers.pick_source(sources) + helpers.append_headers(headers)
+
+        html += helpers.get_packed_data(html)
+        sources = helpers.scrape_sources(html)
+
+        if sources:
+            headers.update({'Referer': web_url})
+            return helpers.get_redirect_url(helpers.pick_source(sources).replace('getIink', 'getlink'), headers) + helpers.append_headers(headers)
 
         raise ResolverError("Video not found")
 
     def get_url(self, host, media_id):
-        return self._default_get_url(host, media_id, template='https://{host}/{media_id}')
+
+        return self._default_get_url(host, media_id, template='https://streamz.vg/{media_id}')
