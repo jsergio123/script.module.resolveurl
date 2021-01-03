@@ -25,7 +25,7 @@ from resolveurl.resolver import ResolveUrl, ResolverError
 class StreamTapeResolver(ResolveUrl):
     name = "streamtape"
     domains = ['streamtape.com']
-    pattern = r'(?://|\.)(streamtape\.com)/(?:e|v)/([0-9a-zA-Z]+)'
+    pattern = r'(?://|\.)(streamtape\.com)/(?:e|v)/([0-9a-zA-Z/.]+)'
 
     def __init__(self):
         self.net = common.Net()
@@ -35,9 +35,10 @@ class StreamTapeResolver(ResolveUrl):
         headers = {'User-Agent': common.FF_USER_AGENT,
                    'Referer': 'https://{0}/'.format(host)}
         r = self.net.http_GET(web_url, headers=headers)
-        src = re.search(r'''videolink['"].+?innerHTML\s*=\s*['"]([^'"]+)''', r.content)
+        src = re.compile(r'''videolink['"].+?innerHTML\s*=\s*['"]([^;]+)''', re.DOTALL | re.I).findall(r.content)
         if src:
-            src_url = 'https:' + src.group(1) if src.group(1).startswith('//') else src.group(1)
+            src = src[0].replace(' ','').replace('+', '').replace('"', '').replace("'", "")
+            src_url = 'https:' + src if src.startswith('//') else src
             src_url += '&stream=1'
             return helpers.get_redirect_url(src_url, headers) + helpers.append_headers(headers)
         raise ResolverError('Video cannot be located.')
