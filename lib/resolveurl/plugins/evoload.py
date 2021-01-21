@@ -42,10 +42,20 @@ class EvoLoadResolver(ResolveUrl):
             headers.update({'Origin': rurl[:-1],
                             'X-XSRF-TOKEN': ''})
             shtml = self.net.http_POST(surl, form_data=edata, headers=headers, jdata=True).content
-            r = re.search('"src":"([^"]+)', shtml)
-            if r:
+            
+            url = ''
+            try:
+                r = re.search('"src":"([^"]+)', shtml)
+                if r and self.net.http_GET(r.group(1))._response.code == 200: url = r.group(1)
+            except:
+                try:
+                    r = re.search('"backup":"([^"]+)', shtml)
+                    if r and self.net.http_GET(r.group(1))._response.code == 200: url = r.group(1)
+                except:
+                    return
+            if url != '':
                 headers.pop('X-XSRF-TOKEN')
-                return r.group(1) + helpers.append_headers(headers)
+                return url + helpers.append_headers(headers)
 
         raise ResolverError('File Not Found or removed')
 
