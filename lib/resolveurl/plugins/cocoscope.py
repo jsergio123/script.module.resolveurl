@@ -1,6 +1,6 @@
 '''
     Plugin for ResolveURL
-    Copyright (C) 2016
+    Copyright (C) 2021
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 '''
 from resolveurl.plugins.__resolve_generic__ import ResolveGeneric
 
-class PutLoadResolver(ResolveGeneric):
+class CocoScopeResolver(ResolveGeneric):
     name = "cocoscope.com"
     domains = ["cocoscope.com"]
     pattern = r'(?://|\.)(cocoscope\.com)/watch\?v=?([0-9a-zA-Z]+)'
