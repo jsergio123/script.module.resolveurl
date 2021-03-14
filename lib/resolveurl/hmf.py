@@ -187,7 +187,7 @@ class HostedMediaFile:
                         stream_url = resolver.get_media_url(self._host, self._media_id)
                         if stream_url.startswith("//"):
                             stream_url = 'http:%s' % stream_url
-                        if stream_url and self.__test_stream(stream_url):
+                        if stream_url and test_stream(stream_url):
                             self.__resolvers = [resolver]  # Found a working resolver, throw out the others
                             self._valid_url = True
                             return stream_url
@@ -230,70 +230,6 @@ class HostedMediaFile:
             self._valid_url = True if resolvers else False
         return self._valid_url
 
-    def __test_stream(self, stream_url):
-        """
-        Returns True if the stream_url gets a non-failure http status (i.e. <400) back from the server
-        otherwise return False
-
-        Intended to catch stream urls returned by resolvers that would fail to playback
-        """
-        # parse_qsl doesn't work because it splits elements by ';' which can be in a non-quoted UA
-        try:
-            headers = dict([item.split('=') for item in (stream_url.split('|')[1]).split('&')])
-        except:
-            headers = {}
-        for header in headers:
-            headers[header] = urllib_parse.unquote_plus(headers[header])
-        common.logger.log_debug('Setting Headers on UrlOpen: %s' % headers)
-
-        try:
-            import ssl
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            opener = urllib_request.build_opener(urllib_request.HTTPSHandler(context=ssl_context))
-            urllib_request.install_opener(opener)
-        except:
-            pass
-
-        try:
-            msg = ''
-            request = urllib_request.Request(stream_url.split('|')[0], headers=headers)
-            # only do a HEAD request. gujal
-            request.get_method = lambda: 'HEAD'
-            #  set urlopen timeout to 15 seconds
-            http_code = urllib_request.urlopen(request, timeout=15).getcode()
-        except urllib_error.HTTPError as e:
-            if isinstance(e, urllib_error.HTTPError):
-                http_code = e.code
-                if http_code == 405:
-                    http_code = 200
-            else:
-                http_code = 600
-        except urllib_error.URLError as e:
-            http_code = 500
-            if hasattr(e, 'reason'):
-                # treat an unhandled url type as success
-                if 'unknown url type' in str(e.reason).lower():
-                    return True
-                else:
-                    msg = e.reason
-            if not msg:
-                msg = str(e)
-
-        except Exception as e:
-            http_code = 601
-            msg = str(e)
-            if msg == "''":
-                http_code = 504
-
-        # added this log line for now so that we can catch any logs on streams that are rejected due to test_stream failures
-        # we can remove it once we are sure this works reliably
-        if int(http_code) >= 400 and int(http_code) != 504:
-            common.logger.log_warning('Stream UrlOpen Failed: Url: %s HTTP Code: %s Msg: %s' % (stream_url, http_code, msg))
-
-        return int(http_code) < 400 or int(http_code) == 504
-
     def __nonzero__(self):
         if self._valid_url is None:
             return self.valid_url()
@@ -305,3 +241,68 @@ class HostedMediaFile:
 
     def __repr__(self):
         return self.__str__()
+
+
+def test_stream(stream_url):
+    """
+    Returns True if the stream_url gets a non-failure http status (i.e. <400) back from the server
+    otherwise return False
+
+    Intended to catch stream urls returned by resolvers that would fail to playback
+    """
+    # parse_qsl doesn't work because it splits elements by ';' which can be in a non-quoted UA
+    try:
+        headers = dict([item.split('=') for item in (stream_url.split('|')[1]).split('&')])
+    except:
+        headers = {}
+    for header in headers:
+        headers[header] = urllib_parse.unquote_plus(headers[header])
+    common.logger.log_debug('Setting Headers on UrlOpen: %s' % headers)
+
+    try:
+        import ssl
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        opener = urllib_request.build_opener(urllib_request.HTTPSHandler(context=ssl_context))
+        urllib_request.install_opener(opener)
+    except:
+        pass
+
+    try:
+        msg = ''
+        request = urllib_request.Request(stream_url.split('|')[0], headers=headers)
+        # only do a HEAD request. gujal
+        request.get_method = lambda: 'HEAD'
+        #  set urlopen timeout to 15 seconds
+        http_code = urllib_request.urlopen(request, timeout=15).getcode()
+    except urllib_error.HTTPError as e:
+        if isinstance(e, urllib_error.HTTPError):
+            http_code = e.code
+            if http_code == 405:
+                http_code = 200
+        else:
+            http_code = 600
+    except urllib_error.URLError as e:
+        http_code = 500
+        if hasattr(e, 'reason'):
+            # treat an unhandled url type as success
+            if 'unknown url type' in str(e.reason).lower():
+                return True
+            else:
+                msg = e.reason
+        if not msg:
+            msg = str(e)
+
+    except Exception as e:
+        http_code = 601
+        msg = str(e)
+        if msg == "''":
+            http_code = 504
+
+    # added this log line for now so that we can catch any logs on streams that are rejected due to test_stream failures
+    # we can remove it once we are sure this works reliably
+    if int(http_code) >= 400 and int(http_code) != 504:
+        common.logger.log_warning('Stream UrlOpen Failed: Url: %s HTTP Code: %s Msg: %s' % (stream_url, http_code, msg))
+
+    return int(http_code) < 400 or int(http_code) == 504
