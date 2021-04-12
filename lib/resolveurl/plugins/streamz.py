@@ -16,6 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import re
 from resolveurl.plugins.lib import helpers
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
@@ -32,14 +33,18 @@ class StreamzResolver(ResolveUrl):
         headers = {'User-Agent': common.CHROME_USER_AGENT}
         html = self.net.http_GET(web_url, headers=headers).content
 
-        html += helpers.get_packed_data(html)
-        sources = helpers.scrape_sources(html)
+        if '<b>File not found, sorry!</b>' not in html:
+            html += helpers.get_packed_data(html)
+            sources = helpers.scrape_sources(html)
 
-        if sources:
-            headers.update({'Referer': web_url})
-            return helpers.get_redirect_url(helpers.pick_source(sources).replace('getIink', 'getlink'), headers) + helpers.append_headers(headers)
+            if sources:
+                headers.update({'Referer': web_url})
+                vurl = helpers.pick_source(sources)
+                vurl = re.sub('get[a-zA-Z]{4}-', 'getlink-', vurl)
+                vurl = re.sub('get[a-zA-Z]{5}-', 'getlink-', vurl)
+                return helpers.get_redirect_url(vurl, headers) + helpers.append_headers(headers)
 
-        raise ResolverError("Video not found")
+        raise ResolverError("Video not found or removed")
 
     def get_url(self, host, media_id):
 

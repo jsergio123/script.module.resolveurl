@@ -1,6 +1,6 @@
 """
 Plugin for ResolveUrl
-Copyright (C) 2020 gujal
+Copyright (C) 2021 gujal
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,30 +16,32 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import re
 from resolveurl.plugins.lib import helpers
-from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
+from resolveurl import common
 
 
-class StreamTapeResolver(ResolveUrl):
-    name = "streamtape"
-    domains = ['streamtape.com']
-    pattern = r'(?://|\.)(streamtape\.com)/(?:e|v)/([0-9a-zA-Z]+)'
-
-    def __init__(self):
-        self.net = common.Net()
+class VidMojoResolver(ResolveUrl):
+    name = "vidmojo"
+    domains = ['vidmojo.net']
+    pattern = r'(?://|\.)(vidmojo\.net)/(?:embed-)?([^\n]+)'
 
     def get_media_url(self, host, media_id):
+        if '|' in media_id:
+            media_id, referer = media_id.split('|')
+        else:
+            referer = None
         web_url = self.get_url(host, media_id)
+        referer = web_url if referer is None else referer
         headers = {'User-Agent': common.FF_USER_AGENT,
-                   'Referer': 'https://{0}/'.format(host)}
-        r = self.net.http_GET(web_url, headers=headers)
-        src = re.search(r'''ById\('vi.+?=\s*["']([^"']+)['"].+?["']([^"']+)''', r.content)
-        if src:
-            src_url = 'https:{0}{1}&stream=1'.format(src.group(1), src.group(2))
-            return helpers.get_redirect_url(src_url, headers) + helpers.append_headers(headers)
-        raise ResolverError('Video cannot be located.')
+                   'Referer': referer}
+        response = self.net.http_GET(web_url, headers=headers).content
+        srcs = helpers.scrape_sources(response, patterns=[r'''file:\s*"(?P<url>[^"]+)'''])
+        if srcs:
+            headers.update({'Referer': web_url})
+            return helpers.pick_source(sorted(srcs, reverse=True)) + helpers.append_headers(headers)
+
+        raise ResolverError('No playable video found.')
 
     def get_url(self, host, media_id):
-        return self._default_get_url(host, media_id, template='https://{host}/e/{media_id}')
+        return self._default_get_url(host, media_id, template='https://{host}/embed-{media_id}')

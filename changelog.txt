@@ -1,12 +1,12 @@
-Version 5.1.17 (December 07, 2020)
+Version 5.1.28 (April 3, 2021)
 - Code Base Changes:
-    - Regression error with PY2
+    - HostedMediaFile add __bool__ for python 3
 
 - Resolvers Added:
-    - None
+    - streamoupload
  
 - Resolvers Fixed/Updated:
-    - None 
+    - fembed
 
 - Resolvers Removed
     - None
