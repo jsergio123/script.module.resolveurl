@@ -17,6 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import re
+from random import choice
 from resolveurl.plugins.lib import helpers
 from resolveurl import common
 from resolveurl.resolver import ResolveUrl, ResolverError
@@ -25,20 +26,25 @@ from resolveurl.resolver import ResolveUrl, ResolverError
 class UserLoadResolver(ResolveUrl):
     name = "UserLoad"
     domains = ['userload.co']
-    pattern = r'(?://|\.)(userload\.co)/f/([0-9a-zA-Z]+)'
+    pattern = r'(?://|\.)(userload\.co)/f/(\w+)'
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
         headers = {'User-Agent': common.RAND_UA}
         html = self.net.http_GET(web_url, headers=headers).content
         html = helpers.get_packed_data(html)
-        r1 = re.search(r'cdbadffabaac\s*=\s*"([^"]+)', html)
-        r2 = re.search(r'fcaecbefcaec\s*=\s*"([^"]+)', html)
+        for_r_pattern = re.findall(r'var (\w+)', html)
+        r1_pattern = r'{0}\s*=\s*"([^"]+)'.format(for_r_pattern[3])
+        r2_pattern = r'{0}\s*=\s*"([^"]+)'.format(for_r_pattern[5])
+        r1 = re.search(r1_pattern, html)
+        r2 = re.search(r2_pattern, html)
+        request_arguments_1 = ('https://{0}/api/dline/'.format(host), 'hawk', 'eye')
+        request_arguments_2 = ('https://{0}/api/request/'.format(host), 'morocco', 'mycountry')
+        api_url, key1, key2 = choice([request_arguments_1, request_arguments_2])
         if r1 and r2:
-            api_url = 'https://{0}/api/dline/'.format(host)
             data = {
-                'hawk': r1.group(1),
-                'eye': r2.group(1)
+                key1: r1.group(1),
+                key2: r2.group(1)
             }
             headers.update({
                 'X-Requested-With': 'XMLHttpRequest',
@@ -53,4 +59,4 @@ class UserLoadResolver(ResolveUrl):
         raise ResolverError('File not found')
 
     def get_url(self, host, media_id):
-        return self._default_get_url(host, media_id, template='https://{host}/f/{media_id}')
+        return self._default_get_url(host, media_id, template='https://{host}/f/{media_id}/null')
