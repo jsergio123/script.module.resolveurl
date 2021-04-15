@@ -24,8 +24,8 @@ from resolveurl.resolver import ResolveUrl, ResolverError
 
 class AparatResolver(ResolveUrl):
     name = "aparat"
-    domains = ['aparat.cam']
-    pattern = r'(?://|\.)(aparat\.cam)/(?:embed-)?([0-9a-zA-Z]+)'
+    domains = ['aparat.cam', 'wolfstream.tv']
+    pattern = r'(?://|\.)((?:aparat\.cam|wolfstream\.tv))/(?:embed-)?([0-9a-zA-Z]+)'
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
