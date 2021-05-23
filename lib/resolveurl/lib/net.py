@@ -310,8 +310,6 @@ class Net:
         if form_data:
             if jdata:
                 form_data = json.dumps(form_data)
-            elif isinstance(form_data, six.string_types):
-                form_data = form_data
             else:
                 form_data = urllib_parse.urlencode(form_data, True)
             form_data = form_data.encode('utf-8') if six.PY3 else form_data
