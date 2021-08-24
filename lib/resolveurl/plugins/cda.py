@@ -30,26 +30,38 @@ class CdaResolver(ResolveUrl):
 
     def get_media_url(self, host, media_id):
         web_url = self.get_url(host, media_id)
+        qlist = ["360p","480p","720p","1080p"]
+        maxq = 0
+        
         headers = {'Referer': web_url, 'User-Agent': common.RAND_UA}
 
         html = self.net.http_GET(web_url, headers=headers).content
-        sources = re.findall('data-quality.+?href="(?P<url>[^"]+).+?>(?P<label>[^<]+)', html)
-        if sources:
-            sources = [(source[1], source[0]) for source in sources]
-            html = self.net.http_GET(helpers.pick_source(helpers.sort_sources_list(sources)), headers=headers).content
+        sources = re.findall('id="mediaplayer(?P<url>[^"]+).+?>(?P<label>[^<]+)', html)
+        if sources:										  
             match = re.search(r"player_data='([^']+)", html)
             if match:
                 js_data = json.loads(match.group(1))
+                qualities = js_data.get('video').get('qualities')
+                for x in qualities:
+                    if x == '360p' and maxq < 1:
+                        maxq = 0
+                    elif x == '480p' and maxq < 2:
+                        maxq = 1
+                    elif x == '720p' and maxq < 3:
+                        maxq = 2
+                    elif x == '1080p':
+                        maxq = 3
+                    
+                web_url = (web_url + '?wersja=' + qlist[maxq])
+                html = self.net.http_GET(web_url, headers=headers).content
+                match = re.search(r"player_data='([^']+)", html)
+                js_data = json.loads(match.group(1))
                 return self.cda_decode(js_data.get('video').get('file')) + helpers.append_headers(headers)
-        match = re.search(r"player_data='([^']+)", html)
-        if match:
-            js_data = json.loads(match.group(1))
-            return self.cda_decode(js_data.get('video').get('file')) + helpers.append_headers(headers)
 
         raise ResolverError('Video Link Not Found')
 
     def get_url(self, host, media_id):
-        return self._default_get_url(host, media_id, template='https://ebd.cda.pl/647x500/{media_id}/vfilm')
+        return self._default_get_url(host, media_id, template='https://ebd.cda.pl/647x500/{media_id}')
 
     def cda_decode(self, a):
         a = a.replace("_XDDD", "")
