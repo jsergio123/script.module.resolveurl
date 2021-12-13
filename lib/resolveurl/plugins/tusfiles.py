@@ -21,11 +21,12 @@ from resolveurl.plugins.__resolve_generic__ import ResolveGeneric
 
 
 class TusfilesResolver(ResolveGeneric):
-    name = "tusfiles"
+    name = 'tusfiles'
     domains = ['tusfiles.net', 'tusfiles.com']
     pattern = r'(?://|\.)(tusfiles\.(?:net|com))/(?:embed-)?([0-9a-zA-Z]+)'
 
     def get_media_url(self, host, media_id):
-        direct_url = 'http://%s/%s' % (host, media_id)
-        for web_url in [self.get_url(host, media_id), direct_url]:
-            return helpers.get_media_url(web_url)
+        return helpers.get_media_url(self.get_url(host, media_id))
+
+    def get_url(self, host, media_id):
+        return self._default_get_url(host, media_id, template='https://{host}/{media_id}')
