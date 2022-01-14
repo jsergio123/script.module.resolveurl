@@ -44,17 +44,11 @@ class StreamSBResolver(ResolveUrl):
             code, mode, hash = eval(helpers.pick_source(sources))
             dl_url = 'https://{0}/dl?op=download_orig&id={1}&mode={2}&hash={3}'.format(host, code, mode, hash)
             html = self.net.http_GET(dl_url, headers=headers).content
-            domain = 'aHR0cHM6Ly9jbG91ZGVtYi5jb206NDQz'
+            domain = 'aHR0cHM6Ly9zdHJlYW1zYi5uZXQ6NDQz'
             token = helpers.girc(html, rurl, domain)
-            hash2 = re.search(r'hash"\s*value="([^"]+)', html)
-            if token and hash2:
-                payload = {
-                    'op': 'download_orig',
-                    'id': code,
-                    'mode': mode,
-                    'hash': hash2.group(1),
-                    'g-recaptcha-response': token
-                }
+            if token:
+                payload = helpers.get_hidden(html)
+                payload.update({'g-recaptcha-response': token})
                 req = self.net.http_POST(dl_url, form_data=payload, headers=headers).content
                 r = re.search('href="([^"]+)">Direct', req)
                 if r:
