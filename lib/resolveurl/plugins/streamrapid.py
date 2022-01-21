@@ -35,12 +35,10 @@ class StreamRapidResolver(ResolveUrl):
             media_id, referer = media_id.split('$$')
             referer = urllib_parse.urljoin(referer, '/')
         else:
-            referer = False
-        web_url = self.get_url(host, media_id)
-        rurl = urllib_parse.urljoin(web_url, '/')
-        if not referer:
             # Needs to be hard coded for now if nothing is passed in.
             referer = 'https://streamrapid.ru/'
+        web_url = self.get_url(host, media_id)
+        rurl = urllib_parse.urljoin(web_url, '/')
         headers = {'User-Agent': common.FF_USER_AGENT,
                    'Referer': referer}
         html = self.net.http_GET(web_url, headers).content
