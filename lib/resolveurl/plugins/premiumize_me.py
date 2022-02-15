@@ -1,5 +1,5 @@
 """
-    resolveurl XBMC Addon
+    Plugin for ResolveURL
     Copyright (C) 2018 jsergio
 
     This program is free software: you can redistribute it and/or modify
@@ -16,11 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import re
-import urllib
+from six.moves import urllib_parse, urllib_error
 import json
-import urllib2
-
-from lib import helpers
+from resolveurl.plugins.lib import helpers
 from resolveurl import common
 from resolveurl.common import i18n
 from resolveurl.resolver import ResolveUrl, ResolverError
@@ -74,7 +72,8 @@ class PremiumizeMeResolver(ResolveUrl):
             torrent = True
             logger.log_debug('Premiumize.me: initiating transfer to cloud for %s' % media_id)
             self.__initiate_transfer(media_id)
-            self.__clear_finished()
+            if self.get_setting('clear_finished') == 'true':
+                self.__clear_finished()
             # self.__delete_folder()
 
         link = self.__direct_dl(media_id, torrent=torrent)
@@ -98,13 +97,13 @@ class PremiumizeMeResolver(ResolveUrl):
             aliases = result.get('aliases', {})
             patterns = result.get('regexpatterns', {})
             tldlist = []
-            for tlds in aliases.values():
+            for tlds in list(aliases.values()):
                 for tld in tlds:
                     tldlist.append(tld)
             if self.get_setting('torrents') == 'true':
                 tldlist.extend([u'torrent', u'magnet'])
             regex_list = []
-            for regexes in patterns.values():
+            for regexes in list(patterns.values()):
                 for regex in regexes:
                     try:
                         regex_list.append(re.compile(regex))
@@ -158,7 +157,7 @@ class PremiumizeMeResolver(ResolveUrl):
         folder_id = self.__create_folder()
         if not folder_id == "":
             try:
-                data = urllib.urlencode({'src': media_id, 'folder_id': folder_id})
+                data = urllib_parse.urlencode({'src': media_id, 'folder_id': folder_id})
                 response = self.net.http_POST(create_transfer_path, form_data=data, headers=self.headers).content
                 result = json.loads(response)
                 if 'status' in result:
@@ -188,7 +187,7 @@ class PremiumizeMeResolver(ResolveUrl):
     def __delete_transfer(self, transfer_id):
         if not transfer_id == "":
             try:
-                data = urllib.urlencode({'id': transfer_id})
+                data = urllib_parse.urlencode({'id': transfer_id})
                 response = self.net.http_POST(delete_transfer_path, form_data=data, headers=self.headers).content
                 result = json.loads(response)
                 if 'status' in result:
@@ -207,7 +206,7 @@ class PremiumizeMeResolver(ResolveUrl):
             line1 = transfer_info.get('name')
             line2 = 'Saving torrent to the Premiumize Cloud'
             line3 = transfer_info.get('message')
-            with common.kodi.ProgressDialog('Resolve URL Premiumize Transfer', line1, line2, line3) as pd:
+            with common.kodi.ProgressDialog('ResolveURL Premiumize Transfer', line1, line2, line3) as pd:
                 while not transfer_info.get('status') == 'seeding':
                     common.kodi.sleep(1000 * interval)
                     transfer_info = self.__list_transfer(transfer_id)
@@ -224,24 +223,23 @@ class PremiumizeMeResolver(ResolveUrl):
                         # self.__delete_folder()
                         raise ResolverError('Transfer ID %s has stalled' % transfer_id)
             common.kodi.sleep(1000 * interval)  # allow api time to generate the stream_link
-        self.__delete_transfer(transfer_id)  # just in case __clear_finished() doesnt work
+        # self.__delete_transfer(transfer_id)  # just in case __clear_finished() doesnt work
 
         return
 
     def __direct_dl(self, media_id, torrent=False):
         try:
-            data = urllib.urlencode({'src': media_id})
+            data = urllib_parse.urlencode({'src': media_id})
             response = self.net.http_POST(direct_dl_path, form_data=data, headers=self.headers).content
             result = json.loads(response)
             if 'status' in result:
                 if result.get('status') == 'success':
                     if torrent:
-                        _videos = []
-                        for items in result.get("content"):
-                            if any(items.get('path').lower().endswith(x) for x in FORMATS) and not items.get("link", "") == "":
-                                _videos.append(items)
+                        _videos = [(int(item.get('size')), item.get('link')) for item in result.get("content")
+                                   if any(item.get('path').lower().endswith(x)
+                                          for x in FORMATS)]
                         try:
-                            return max(_videos, key=lambda x: x.get('size')).get('link', None)
+                            return max(_videos)[1]
                         except ValueError:
                             raise ResolverError('Failed to locate largest video file')
                     else:
@@ -273,7 +271,7 @@ class PremiumizeMeResolver(ResolveUrl):
         folder_id = self.__list_folders()
         if folder_id == "":
             try:
-                data = urllib.urlencode({'name': folder_name})
+                data = urllib_parse.urlencode({'name': folder_name})
                 response = self.net.http_POST(create_folder_path, form_data=data, headers=self.headers).content
                 result = json.loads(response)
                 if 'status' in result:
@@ -291,7 +289,7 @@ class PremiumizeMeResolver(ResolveUrl):
         folder_id = self.__list_folders()
         if not folder_id == "":
             try:
-                data = urllib.urlencode({'id': folder_id})
+                data = urllib_parse.urlencode({'id': folder_id})
                 response = self.net.http_POST(delete_folder_path, form_data=data, headers=self.headers).content
                 result = json.loads(response)
                 if 'status' in result:
@@ -342,7 +340,7 @@ class PremiumizeMeResolver(ResolveUrl):
             js_result = json.loads(self.net.http_POST(token_path, form_data=data, headers=self.headers).content)
             logger.log_debug('Authorizing Premiumize.me Result: |%s|' % js_result)
             self.set_setting('token', js_result['access_token'])
-        except urllib2.HTTPError as e:
+        except urllib_error.HTTPError as e:
             try:
                 js_result = json.loads(e.read())
                 if 'error' in js_result:
@@ -371,6 +369,7 @@ class PremiumizeMeResolver(ResolveUrl):
         xml = super(cls, cls).get_settings_xml()
         xml.append('<setting id="%s_torrents" type="bool" label="%s" default="true"/>' % (cls.__name__, i18n('torrents')))
         xml.append('<setting id="%s_cached_only" enable="eq(-1,true)" type="bool" label="%s" default="false" />' % (cls.__name__, i18n('cached_only')))
+        xml.append('<setting id="%s_clear_finished" enable="eq(-2,true)" type="bool" label="%s" default="false" />' % (cls.__name__, i18n('clear_finished')))
         xml.append('<setting id="%s_auth" type="action" label="%s" action="RunPlugin(plugin://script.module.resolveurl/?mode=auth_pm)"/>' % (cls.__name__, i18n('auth_my_account')))
         xml.append('<setting id="%s_reset" type="action" label="%s" action="RunPlugin(plugin://script.module.resolveurl/?mode=reset_pm)"/>' % (cls.__name__, i18n('reset_my_auth')))
         xml.append('<setting id="%s_token" visible="false" type="text" default=""/>' % cls.__name__)

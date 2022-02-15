@@ -1,3 +1,4 @@
+# flake8: noqa
 # The MIT License (MIT)
 #
 # Copyright (c) 2014 Richard Moore
@@ -21,8 +22,8 @@
 # THE SOFTWARE.
 
 
-from .aes import AESBlockModeOfOperation, AESSegmentModeOfOperation, AESStreamModeOfOperation
-from .util import append_PKCS7_padding, strip_PKCS7_padding, to_bufferable
+from resolveurl.lib.pyaes.aes import AESBlockModeOfOperation, AESSegmentModeOfOperation, AESStreamModeOfOperation
+from resolveurl.lib.pyaes.util import append_PKCS7_padding, strip_PKCS7_padding, to_bufferable
 
 
 # First we inject three functions to each of the modes of operations

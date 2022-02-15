@@ -1,3 +1,15 @@
-[B]Version 5.0.38 (Feb 20, 2020)[/B]
-- See GitHub for changes
-    - https://github.com/jsergio123/script.module.resolveurl/commits/master
+Version 5.1.27 (March 14, 2021)
+- Code Base Changes:
+    - None
+
+- Resolvers Added:
+    - vidmojo
+ 
+- Resolvers Fixed/Updated:
+    - None
+
+- Resolvers Removed
+    - None
+
+- Languages Added/Updated
+    - None
